@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { confirm } from "@tauri-apps/plugin-dialog";
-import { relaunch } from "@tauri-apps/plugin-process";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useActiveWorkspace as useActiveWorkspaceCtx } from "../lib/workspace-context";
 import {
@@ -116,12 +115,18 @@ export default function SettingsPage() {
     try {
       const result = await restoreBackup.mutateAsync();
       if (!result) return;
-      toast.success("Backup restored — restarting…");
-      // A webview-only reload wouldn't re-run migrations against the
-      // restored file, since tauri-plugin-sql only applies each database's
-      // migrations once per process lifetime. A full relaunch is needed so
-      // an older backup gets forward-migrated correctly.
-      setTimeout(() => void relaunch(), 800);
+      toast.success("Backup restored — reloading…");
+      // Reopening via a webview reload only forward-migrates the restored
+      // file if it's the very first load of this database URL in the
+      // current process — tauri-plugin-sql consumes each URL's migrations
+      // once per process lifetime, so restoring a much older backup mid-
+      // session may leave it a schema version behind until the app is next
+      // actually relaunched. We accept that narrow edge case here: a real
+      // process relaunch (app.request_restart) would handle it correctly,
+      // but isn't reliable in every environment (e.g. tauri dev, where the
+      // CLI supervises and tears down the child process), and "the app
+      // doesn't come back" is a worse failure than a stale schema.
+      setTimeout(() => window.location.reload(), 800);
     } catch (error) {
       toast.error("Restore failed", {
         description: error instanceof Error ? error.message : undefined,
@@ -148,12 +153,10 @@ export default function SettingsPage() {
         result.preResetBackupPath ? "Workspace reset — backup saved" : "Workspace reset",
         { description: result.preResetBackupPath ?? undefined },
       );
-      // Same reason as restore: a webview-only reload reopens the freshly
-      // recreated (empty) database file without re-running migrations,
-      // since tauri-plugin-sql only applies migrations once per process
-      // lifetime — leaving it with no tables at all. A full relaunch makes
-      // the Rust side re-register and re-run them from scratch.
-      setTimeout(() => void relaunch(), 800);
+      // No reload/relaunch needed: resetWorkspace clears data in place on
+      // the existing connection, and its onSuccess already invalidated
+      // every query — the app's own "no workspace" routing gate takes it
+      // back to onboarding reactively once that refetch lands.
     } catch (error) {
       toast.error("Reset failed", {
         description: error instanceof Error ? error.message : undefined,

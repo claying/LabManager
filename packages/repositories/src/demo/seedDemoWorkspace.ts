@@ -93,9 +93,9 @@ export async function seedDemoWorkspace(): Promise<void> {
     email: "james.wu@simlab.edu",
     role: "Postdoc",
     start_date: daysAgo(365),
-    research_interests: ["functional annotation", "protein language models"],
+    research_interests: ["ligand-binding site prediction", "protein language models"],
     skills: ["PyTorch", "Bioinformatics pipelines"],
-    bio: "Postdoc focused on functional region detection and protein language models.",
+    bio: "Postdoc focused on graph-based binding-site prediction and protein language models.",
   });
   const tom = await peopleRepository.create({
     name: "Tom Anderson",
@@ -133,10 +133,10 @@ export async function seedDemoWorkspace(): Promise<void> {
   });
 
   const geoflow = await projectRepository.create({
-    title: "Geometric Flow Matching",
-    short_name: "GeoFlow",
+    title: "SE(3)-Equivariant Flow Matching for Protein Backbone Design",
+    short_name: "FlowBB",
     description:
-      "Flow-matching generative models that respect molecular geometry for protein backbone generation.",
+      "Conditional SE(3)-equivariant flow-matching models for de novo protein backbone generation, benchmarked against diffusion baselines as we scale model and dataset size.",
     lead_person_id: marcus.id,
     stage: "main_experiments",
     health: "healthy",
@@ -145,13 +145,13 @@ export async function seedDemoWorkspace(): Promise<void> {
     target_date: daysFromNow(60),
     next_milestone: "Full-scale backbone generation benchmark",
     next_milestone_date: daysFromNow(12),
-    github_url: "https://github.com/sim-lab/geoflow",
+    github_url: "https://github.com/sim-lab/flow-bb",
   });
   const funcRegion = await projectRepository.create({
-    title: "Protein Functional Region Detection",
-    short_name: "FuncRegion",
+    title: "Graph Neural Networks for Ligand-Binding Pocket Prediction",
+    short_name: "PocketGNN",
     description:
-      "Identifying functionally important regions of proteins from sequence and structure jointly.",
+      "Residue- and pocket-center-level graph neural networks that identify ligand-binding sites directly from AlphaFold-predicted structures.",
     lead_person_id: james.id,
     stage: "writing",
     health: "attention",
@@ -160,12 +160,13 @@ export async function seedDemoWorkspace(): Promise<void> {
     target_date: daysFromNow(30),
     next_milestone: "Submit to ISMB",
     next_milestone_date: daysFromNow(5),
-    github_url: "https://github.com/sim-lab/func-region",
+    github_url: "https://github.com/sim-lab/pocket-gnn",
   });
   const scaleRep = await projectRepository.create({
-    title: "Scalable Protein Representation Learning",
-    short_name: "ScaleRep",
-    description: "Efficient pretraining objectives for protein representation learning at scale.",
+    title: "Structure-Aware Masked Pretraining for Protein Representation Learning",
+    short_name: "StructMask",
+    description:
+      "Pretraining objectives that mask 3D structural neighborhoods instead of sequence alone, compared against contrastive and standard masked-language baselines.",
     lead_person_id: priya.id,
     stage: "baselines",
     health: "healthy",
@@ -176,9 +177,10 @@ export async function seedDemoWorkspace(): Promise<void> {
     next_milestone_date: daysFromNow(20),
   });
   const ctrlGen = await projectRepository.create({
-    title: "Controllable Protein Generation",
-    short_name: "CtrlGen",
-    description: "Conditioning generative protein models on functional and structural constraints.",
+    title: "Binding-Site-Conditioned Protein Backbone Generation",
+    short_name: "CondGen",
+    description:
+      "Conditioning flow-matching generative models on target binding-site geometry so generated backbones satisfy functional constraints by construction.",
     lead_person_id: alice.id,
     stage: "prototype",
     health: "healthy",
@@ -189,10 +191,10 @@ export async function seedDemoWorkspace(): Promise<void> {
     next_milestone_date: daysFromNow(25),
   });
   const graphFM = await projectRepository.create({
-    title: "Graph Foundation Models",
+    title: "Iterative Equivariant Refinement for Graph-Based Structural Biology Foundation Models",
     short_name: "GraphFM",
     description:
-      "Pretrained graph neural networks as general-purpose structural biology foundation models.",
+      "Pretrained graph neural networks with an iterative SE(3)-equivariant refinement stage, aimed at general-purpose structural biology representations that generalize across folds and message-passing depths.",
     lead_person_id: alice.id,
     stage: "ablation",
     health: "stalled",
@@ -204,10 +206,10 @@ export async function seedDemoWorkspace(): Promise<void> {
     github_url: "https://github.com/sim-lab/graphfm",
   });
   const molOpt = await projectRepository.create({
-    title: "Molecular Optimization",
+    title: "Optimizing Molecular Binders over a Generative Docking Latent Space",
     short_name: "MolOpt",
     description:
-      "Optimization methods for molecular property design over generative model latent spaces.",
+      "Gradient- and search-based optimization of small-molecule and peptide binders within the latent space of a pretrained generative docking model.",
     lead_person_id: emma.id,
     stage: "idea",
     health: "healthy",
@@ -217,10 +219,10 @@ export async function seedDemoWorkspace(): Promise<void> {
     next_milestone_date: daysFromNow(30),
   });
   const ppiNet = await projectRepository.create({
-    title: "Protein Interaction Prediction",
+    title: "Equivariant Graph Networks for Protein-Protein Interaction Site Prediction",
     short_name: "PPI-Net",
     description:
-      "Predicting protein-protein interaction interfaces from joint structural embeddings.",
+      "E(n)-equivariant graph neural networks that predict protein-protein interaction interfaces from joint structural embeddings and residue-level contact profiles.",
     lead_person_id: priya.id,
     stage: "ablation",
     health: "attention",
@@ -231,10 +233,10 @@ export async function seedDemoWorkspace(): Promise<void> {
     next_milestone_date: daysAgo(1),
   });
   const effBio = await projectRepository.create({
-    title: "Efficient Biological Foundation Models",
+    title: "Structured Distillation for Efficient, Deployable Biological Foundation Models",
     short_name: "EffBio",
     description:
-      "Distillation and efficient architectures for deployable biological foundation models.",
+      "Structured distillation and efficient attention variants for deploying large biological foundation models under realistic inference-latency budgets.",
     lead_person_id: james.id,
     stage: "rebuttal",
     health: "healthy",
@@ -483,7 +485,7 @@ export async function seedDemoWorkspace(): Promise<void> {
 
   const m1 = await meetingRepository.create(pi, {
     project_id: geoflow.id,
-    title: "GeoFlow weekly sync",
+    title: "FlowBB weekly sync",
     meeting_type: "project",
     meeting_date: daysAgo(3),
     attendee_person_ids: [marcus.id, tom.id],
@@ -512,10 +514,10 @@ export async function seedDemoWorkspace(): Promise<void> {
     meeting_date: daysAgo(7),
     attendee_person_ids: [pi, alice.id, marcus.id, priya.id, james.id],
     progress: "Round-robin project updates from all active projects.",
-    results: "GeoFlow and CtrlGen both showing strong early results.",
+    results: "FlowBB and CondGen both showing strong early results.",
     blockers: null,
     decisions:
-      "Lab will prioritize compute allocation for GeoFlow's benchmark run over the next two weeks.",
+      "Lab will prioritize compute allocation for FlowBB's benchmark run over the next two weeks.",
     next_steps: "Sarah to coordinate compute allocation with IT.",
   });
   const m4 = await meetingRepository.create(pi, {
@@ -581,7 +583,7 @@ export async function seedDemoWorkspace(): Promise<void> {
   );
   await actionItemRepository.create({
     assignee_person_id: pi,
-    title: "Coordinate compute allocation for GeoFlow benchmark",
+    title: "Coordinate compute allocation for FlowBB benchmark",
     description: null,
     status: "open",
     priority: "high",
@@ -641,7 +643,7 @@ export async function seedDemoWorkspace(): Promise<void> {
 
   const pub1 = await publicationRepository.create({
     project_id: funcRegion.id,
-    title: "Detecting Functional Regions in Proteins via Joint Sequence-Structure Models",
+    title: "Predicting Ligand-Binding Pockets from AlphaFold Structures with Graph Neural Networks",
     status: "drafting",
     venue: "ISMB 2027",
     submission_deadline: dateOnly(daysFromNow(5)),
@@ -658,7 +660,7 @@ export async function seedDemoWorkspace(): Promise<void> {
   });
   await publicationRepository.create({
     project_id: effBio.id,
-    title: "Efficient Biological Foundation Models via Structured Distillation",
+    title: "Structured Distillation for Efficient Biological Foundation Models",
     status: "rebuttal",
     venue: "NeurIPS 2026",
     submission_deadline: null,
@@ -675,7 +677,7 @@ export async function seedDemoWorkspace(): Promise<void> {
   });
   const pub3 = await publicationRepository.create({
     project_id: graphFM.id,
-    title: "Graph Foundation Models for Structural Biology",
+    title: "Iterative Equivariant Refinement for Structural Biology Foundation Models",
     status: "experiments",
     venue: "ICML 2027",
     submission_deadline: dateOnly(daysFromNow(45)),
@@ -692,7 +694,7 @@ export async function seedDemoWorkspace(): Promise<void> {
   });
   await publicationRepository.create({
     project_id: geoflow.id,
-    title: "Geometric Flow Matching for Protein Backbone Generation",
+    title: "SE(3)-Equivariant Flow Matching for De Novo Protein Backbone Generation",
     status: "idea",
     venue: null,
     submission_deadline: dateOnly(daysFromNow(90)),
@@ -871,7 +873,7 @@ export async function seedDemoWorkspace(): Promise<void> {
     notes: null,
   });
   await grantRepository.create({
-    title: "NIH R01: Functional Annotation of the Structural Proteome",
+    title: "NIH R01: Graph Neural Networks for Ligand-Binding Site Discovery",
     funder: "NIH",
     program: "R01",
     status: "preparing",
@@ -882,7 +884,7 @@ export async function seedDemoWorkspace(): Promise<void> {
     currency: "USD",
     pi_person_id: pi,
     description:
-      "Proposal in preparation to fund functional annotation work building on FuncRegion.",
+      "Proposal in preparation to fund binding-site prediction work building on PocketGNN.",
     notes: null,
   });
   await grantRepository.create({

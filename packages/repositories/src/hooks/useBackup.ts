@@ -99,8 +99,12 @@ export function useRestoreBackup() {
 }
 
 export function useResetWorkspace() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: () => backupRepository.resetWorkspace(),
+    // Everything changed — refetch the whole app's data so the "no
+    // workspace" routing gate (AppShellLayout) redirects to onboarding.
+    onSuccess: () => void qc.invalidateQueries(),
   });
 }
 

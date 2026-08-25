@@ -185,14 +185,37 @@ export const backupRepository: BackupRepository = {
       preResetBackupPath = pre.path;
     }
 
-    await closeDb();
-    const dbPath = await getDbFilePath();
-    // Also remove WAL/SHM/journal sidecar files, if SQLite created any, so
-    // no stale state survives to confuse the fresh database getDb() creates
-    // (and re-migrates from scratch) on its next call.
-    for (const path of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`, `${dbPath}-journal`]) {
-      if (await exists(path)) await remove(path);
+    // Clears every table in place on the SAME live connection, instead of
+    // deleting the file and reopening/relaunching: tauri-plugin-sql only
+    // runs a database's registered migrations once per process lifetime
+    // (see commands.rs::load), so a reopened connection finds none left to
+    // run and opens an unmigrated, empty file. Truncating in place keeps
+    // the existing schema intact, so nothing needs to reload or relaunch —
+    // the caller just invalidates queries and the app's own "no workspace"
+    // routing gate takes it back to onboarding reactively.
+    const db = await getDb();
+    const tables = await db.select<{ name: string }[]>(
+      `select name from sqlite_master
+       where type = 'table'
+         and name not like 'sqlite_%'
+         and name != '_sqlx_migrations'
+         and name not like 'search_index%'`,
+    );
+
+    await db.execute("pragma foreign_keys = off");
+    try {
+      await db.execute("begin");
+      for (const { name } of tables) {
+        await db.execute(`delete from "${name}"`);
+      }
+      await db.execute("commit");
+    } catch (error) {
+      await db.execute("rollback");
+      throw error;
+    } finally {
+      await db.execute("pragma foreign_keys = on");
     }
+    await db.execute("vacuum");
 
     return { preResetBackupPath };
   },
