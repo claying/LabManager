@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "web",
+      "name": "desktop",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@pi-os/web", "dev"],
-      "port": 3000
+      "runtimeArgs": ["--filter", "@pi-os/desktop", "dev"],
+      "port": 1420
     }
   ]
 }

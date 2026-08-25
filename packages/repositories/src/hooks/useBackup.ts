@@ -98,6 +98,12 @@ export function useRestoreBackup() {
   });
 }
 
+export function useResetWorkspace() {
+  return useMutation({
+    mutationFn: () => backupRepository.resetWorkspace(),
+  });
+}
+
 export function useExportEntity() {
   return useMutation({
     mutationFn: async ({

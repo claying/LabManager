@@ -61,6 +61,13 @@ export interface BackupRepository {
     zipPath: string,
   ): Promise<{ manifest: BackupManifest; preRestoreBackupPath: string | null }>;
   validateBackup(zipPath: string): Promise<BackupManifest>;
+  /**
+   * Permanently deletes all local data and returns the app to first-run
+   * onboarding. Backs up the current workspace first if a backup directory
+   * is configured (the caller is responsible for warning the PI when one
+   * isn't, since in that case this is unrecoverable).
+   */
+  resetWorkspace(): Promise<{ preResetBackupPath: string | null }>;
 }
 
 export const backupRepository: BackupRepository = {
@@ -168,5 +175,25 @@ export const backupRepository: BackupRepository = {
     // migration check, safely forward-migrating an older backup if needed.
 
     return { manifest, preRestoreBackupPath };
+  },
+
+  async resetWorkspace() {
+    let preResetBackupPath: string | null = null;
+    const directory = await settingsRepository.getBackupDirectory();
+    if (directory) {
+      const pre = await backupRepository.createBackup(directory);
+      preResetBackupPath = pre.path;
+    }
+
+    await closeDb();
+    const dbPath = await getDbFilePath();
+    // Also remove WAL/SHM/journal sidecar files, if SQLite created any, so
+    // no stale state survives to confuse the fresh database getDb() creates
+    // (and re-migrates from scratch) on its next call.
+    for (const path of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`, `${dbPath}-journal`]) {
+      if (await exists(path)) await remove(path);
+    }
+
+    return { preResetBackupPath };
   },
 };

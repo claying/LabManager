@@ -13,6 +13,7 @@ import {
   useSetBackupRetentionDays,
   useCreateBackup,
   useRestoreBackup,
+  useResetWorkspace,
   useExportEntity,
   DEFAULT_BACKUP_RETENTION_DAYS,
 } from "@pi-os/repositories";
@@ -87,6 +88,7 @@ export default function SettingsPage() {
   const setRetentionDays = useSetBackupRetentionDays();
   const createBackup = useCreateBackup();
   const restoreBackup = useRestoreBackup();
+  const resetWorkspace = useResetWorkspace();
   const exportEntity = useExportEntity();
 
   async function onBackupNow() {
@@ -117,6 +119,33 @@ export default function SettingsPage() {
       setTimeout(() => window.location.reload(), 800);
     } catch (error) {
       toast.error("Restore failed", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    }
+  }
+
+  async function onResetWorkspace() {
+    const warning = backupDirectory
+      ? "This permanently deletes every project, person, meeting, publication, and grant in this workspace. A backup will be created first in your configured backup directory, so it can be recovered from there if needed. The app will then return to first-time setup. Continue?"
+      : "This permanently deletes every project, person, meeting, publication, and grant in this workspace. No backup directory is configured, so this CANNOT be undone. The app will then return to first-time setup. Continue?";
+    const proceed = await confirm(warning, { title: "Reset workspace", kind: "warning" });
+    if (!proceed) return;
+
+    const confirmAgain = await confirm("Are you absolutely sure? All data will be gone.", {
+      title: "Reset workspace",
+      kind: "warning",
+    });
+    if (!confirmAgain) return;
+
+    try {
+      const result = await resetWorkspace.mutateAsync();
+      toast.success(
+        result.preResetBackupPath ? "Workspace reset — backup saved" : "Workspace reset",
+        { description: result.preResetBackupPath ?? undefined },
+      );
+      setTimeout(() => window.location.reload(), 800);
+    } catch (error) {
+      toast.error("Reset failed", {
         description: error instanceof Error ? error.message : undefined,
       });
     }
@@ -339,6 +368,24 @@ export default function SettingsPage() {
                 </span>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle>Danger Zone</CardTitle>
+            <CardDescription>
+              Permanently erase this workspace and start over from setup.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="destructive"
+              onClick={onResetWorkspace}
+              disabled={resetWorkspace.isPending}
+            >
+              {resetWorkspace.isPending ? "Resetting…" : "Reset Workspace…"}
+            </Button>
           </CardContent>
         </Card>
       </main>
