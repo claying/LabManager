@@ -724,23 +724,26 @@ export async function seedDemoWorkspace(): Promise<void> {
     notes: "Internal review circulated to co-authors.",
     author_person_ids: [priya.id, rachel.id],
   });
-  const pub6 = await publicationRepository.create({
-    title: "Scalable Pretraining Objectives for Protein Representation Learning",
+  // A real, externally published paper (verified via Crossref), shown with
+  // no authors or project so nothing implies this fictional demo lab wrote
+  // it — it's here only to demonstrate what a completed publication record
+  // looks like, using genuine bibliographic data instead of an invented DOI.
+  await publicationRepository.create({
+    title: "Evolutionary-scale prediction of atomic-level protein structure with a language model",
     status: "published",
-    venue: "Bioinformatics",
+    venue: "Science",
     submission_deadline: null,
-    submission_date: dateOnly(daysAgo(200)),
-    acceptance_date: dateOnly(daysAgo(260)),
-    publication_date: dateOnly(daysAgo(200)),
-    doi: "10.1000/example.doi.001",
+    submission_date: null,
+    acceptance_date: null,
+    publication_date: "2023-03-17",
+    doi: "10.1126/science.ade2574",
     arxiv_url: null,
     overleaf_url: null,
     code_url: null,
     paper_url: null,
-    notes: "Published earlier this year; cited by two follow-up papers already.",
-    author_person_ids: [priya.id, tom.id, pi],
+    notes: "Real published work shown for reference — not authored by this demo lab.",
+    author_person_ids: [],
   });
-  void pub6;
 
   // ---- Tier 2: venue calendar, submission planning, paper readiness -------
   const iclr = await venueRepository.create({
