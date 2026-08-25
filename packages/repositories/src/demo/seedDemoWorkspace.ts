@@ -29,12 +29,13 @@ function dateOnly(iso: string): string {
 }
 
 /**
- * Populates a realistic demo lab ("SIM Lab" — Structural Intelligence and
- * Modeling Lab) so first-run has something to explore immediately (SPEC
- * section 29/33). Only ever called from onboarding, on an empty database —
- * never mixed into a real workspace. Uses relative dates so the "18 days
- * stale, milestone overdue by 4 days" attention example always looks fresh,
- * whenever this is actually run.
+ * Populates a realistic demo lab ("SIM Lab" — Simulation, Intelligence, and
+ * Manipulation Lab) so first-run has something to explore immediately (SPEC
+ * section 29/33). A computer vision / robotics lab specifically so this
+ * doesn't overlap with a bioinformatics PI's own real work. Only ever called
+ * from onboarding, on an empty database — never mixed into a real workspace.
+ * Uses relative dates so the "18 days stale, milestone overdue by 4 days"
+ * attention example always looks fresh, whenever this is actually run.
  */
 export async function seedDemoWorkspace(): Promise<void> {
   const existing = await workspaceRepository.get();
@@ -46,14 +47,14 @@ export async function seedDemoWorkspace(): Promise<void> {
     institution: "State University",
     pi_name: "Dr. Sarah Chen",
     description:
-      "We study geometric and generative machine learning methods for protein structure, function, and design.",
+      "We study generative and geometric machine learning methods for robot perception, manipulation, and simulation-to-reality transfer.",
   });
 
   await peopleRepository.update(workspace.pi_person_id!, {
     email: "sarah.chen@simlab.edu",
-    research_interests: ["geometric deep learning", "protein design", "generative models"],
+    research_interests: ["geometric deep learning", "robot manipulation", "generative models"],
     skills: ["PyTorch", "JAX"],
-    bio: "PI of SIM Lab. Broadly interested in geometry-aware ML for biomolecules.",
+    bio: "PI of SIM Lab. Broadly interested in geometry-aware ML for embodied agents.",
   });
   const pi = workspace.pi_person_id!;
 
@@ -63,9 +64,9 @@ export async function seedDemoWorkspace(): Promise<void> {
     role: "PhD",
     start_date: daysAgo(3 * 365),
     expected_graduation: daysFromNow(365),
-    research_interests: ["graph neural networks", "protein folding"],
+    research_interests: ["vision-language-action models", "3D perception"],
     skills: ["PyTorch Geometric", "CUDA"],
-    bio: "3rd-year PhD student working on graph foundation models for structural biology.",
+    bio: "3rd-year PhD student working on foundation models for embodied perception and manipulation.",
     github_url: "https://github.com/example-alice",
   });
   const marcus = await peopleRepository.create({
@@ -74,9 +75,9 @@ export async function seedDemoWorkspace(): Promise<void> {
     role: "PhD",
     start_date: daysAgo(2 * 365),
     expected_graduation: daysFromNow(2 * 365),
-    research_interests: ["flow matching", "generative models"],
+    research_interests: ["diffusion models", "robot manipulation"],
     skills: ["PyTorch", "JAX"],
-    bio: "2nd-year PhD student on generative flow models for molecular geometry.",
+    bio: "2nd-year PhD student on diffusion-based visuomotor policies for manipulation.",
   });
   const priya = await peopleRepository.create({
     name: "Priya Patel",
@@ -84,18 +85,18 @@ export async function seedDemoWorkspace(): Promise<void> {
     role: "PhD",
     start_date: daysAgo(365),
     expected_graduation: daysFromNow(3 * 365),
-    research_interests: ["protein-protein interaction", "representation learning"],
+    research_interests: ["world models", "trajectory prediction"],
     skills: ["PyTorch", "scikit-learn"],
-    bio: "1st-year PhD student exploring representation learning for protein interactions.",
+    bio: "1st-year PhD student exploring world models and human motion prediction for robot navigation.",
   });
   const james = await peopleRepository.create({
     name: "Dr. James Wu",
     email: "james.wu@simlab.edu",
     role: "Postdoc",
     start_date: daysAgo(365),
-    research_interests: ["ligand-binding site prediction", "protein language models"],
-    skills: ["PyTorch", "Bioinformatics pipelines"],
-    bio: "Postdoc focused on graph-based binding-site prediction and protein language models.",
+    research_interests: ["3D scene reconstruction", "efficient policy inference"],
+    skills: ["PyTorch", "Robotics simulation pipelines"],
+    bio: "Postdoc focused on real-time 3D scene reconstruction and efficient robot policy inference.",
   });
   const tom = await peopleRepository.create({
     name: "Tom Anderson",
@@ -111,62 +112,62 @@ export async function seedDemoWorkspace(): Promise<void> {
     email: "emma.liu@simlab.edu",
     role: "RA",
     start_date: daysAgo(150),
-    research_interests: ["molecular optimization", "cheminformatics"],
-    skills: ["RDKit", "Python"],
-    bio: "Research assistant on molecular optimization and cheminformatics tooling.",
+    research_interests: ["trajectory optimization", "robot simulation"],
+    skills: ["MuJoCo", "Python"],
+    bio: "Research assistant on trajectory optimization and robot simulation tooling.",
   });
   const david = await peopleRepository.create({
     name: "Dr. David Park",
     email: "dpark@partner-university.edu",
     role: "Collaborator",
     start_date: daysAgo(2 * 365),
-    research_interests: ["structural biology", "cryo-EM"],
-    bio: "External collaborator, Partner University — structural biology validation.",
+    research_interests: ["robot hardware", "real-world evaluation"],
+    bio: "External collaborator, Partner University — real-world robot evaluation and hardware validation.",
   });
   const rachel = await peopleRepository.create({
     name: "Dr. Rachel Green",
     email: "rgreen@otherlab.edu",
     role: "Collaborator",
     start_date: daysAgo(365),
-    research_interests: ["biological foundation models"],
-    bio: "External collaborator on efficient biological foundation models.",
+    research_interests: ["robot foundation models"],
+    bio: "External collaborator on efficient robot foundation models.",
   });
 
   const geoflow = await projectRepository.create({
-    title: "SE(3)-Equivariant Flow Matching for Protein Backbone Design",
-    short_name: "FlowBB",
+    title: "Diffusion Policies for Vision-Language-Action Manipulation",
+    short_name: "DiffPolicy",
     description:
-      "Conditional SE(3)-equivariant flow-matching models for de novo protein backbone generation, benchmarked against diffusion baselines as we scale model and dataset size.",
+      "Diffusion-based visuomotor policies conditioned on natural-language instructions for multi-task robotic manipulation, benchmarked against autoregressive VLA baselines.",
     lead_person_id: marcus.id,
     stage: "main_experiments",
     health: "healthy",
     priority: "high",
     start_date: daysAgo(150),
     target_date: daysFromNow(60),
-    next_milestone: "Full-scale backbone generation benchmark",
+    next_milestone: "Full-scale multi-task manipulation benchmark",
     next_milestone_date: daysFromNow(12),
-    github_url: "https://github.com/sim-lab/flow-bb",
+    github_url: "https://github.com/sim-lab/diff-policy",
   });
   const funcRegion = await projectRepository.create({
-    title: "Graph Neural Networks for Ligand-Binding Pocket Prediction",
-    short_name: "PocketGNN",
+    title: "Real-Time Semantic Gaussian Splatting SLAM for Mobile Robots",
+    short_name: "GSplatSLAM",
     description:
-      "Residue- and pocket-center-level graph neural networks that identify ligand-binding sites directly from AlphaFold-predicted structures.",
+      "Online 3D Gaussian Splatting SLAM with semantic scene understanding for dynamic indoor environments.",
     lead_person_id: james.id,
     stage: "writing",
     health: "attention",
     priority: "high",
     start_date: daysAgo(300),
     target_date: daysFromNow(30),
-    next_milestone: "Submit to ISMB",
+    next_milestone: "Submit to CoRL",
     next_milestone_date: daysFromNow(5),
-    github_url: "https://github.com/sim-lab/pocket-gnn",
+    github_url: "https://github.com/sim-lab/gsplat-slam",
   });
   const scaleRep = await projectRepository.create({
-    title: "Structure-Aware Masked Pretraining for Protein Representation Learning",
-    short_name: "StructMask",
+    title: "World Models for Sim-to-Real Transfer in Legged Locomotion",
+    short_name: "WorldSim2Real",
     description:
-      "Pretraining objectives that mask 3D structural neighborhoods instead of sequence alone, compared against contrastive and standard masked-language baselines.",
+      "Learned world models trained in simulation for zero-shot transfer of legged-locomotion policies to physical robots.",
     lead_person_id: priya.id,
     stage: "baselines",
     health: "healthy",
@@ -177,10 +178,10 @@ export async function seedDemoWorkspace(): Promise<void> {
     next_milestone_date: daysFromNow(20),
   });
   const ctrlGen = await projectRepository.create({
-    title: "Binding-Site-Conditioned Protein Backbone Generation",
-    short_name: "CondGen",
+    title: "Task-Conditioned Grasp Generation from Multi-View Perception",
+    short_name: "CondGrasp",
     description:
-      "Conditioning flow-matching generative models on target binding-site geometry so generated backbones satisfy functional constraints by construction.",
+      "Conditioning grasp-generation models on task instructions and multi-view point clouds so generated grasps satisfy downstream manipulation goals.",
     lead_person_id: alice.id,
     stage: "prototype",
     health: "healthy",
@@ -191,25 +192,25 @@ export async function seedDemoWorkspace(): Promise<void> {
     next_milestone_date: daysFromNow(25),
   });
   const graphFM = await projectRepository.create({
-    title: "Iterative Equivariant Refinement for Graph-Based Structural Biology Foundation Models",
-    short_name: "GraphFM",
+    title: "Egocentric Video Pretraining for Vision-Language-Action Foundation Models",
+    short_name: "EgoVLA",
     description:
-      "Pretrained graph neural networks with an iterative SE(3)-equivariant refinement stage, aimed at general-purpose structural biology representations that generalize across folds and message-passing depths.",
+      "Pretraining general-purpose robot foundation models on large-scale egocentric human video, with an iterative action-refinement decoding stage that generalizes across embodiments and control frequencies.",
     lead_person_id: alice.id,
     stage: "ablation",
     health: "stalled",
     priority: "high",
     start_date: daysAgo(240),
     target_date: daysFromNow(30),
-    next_milestone: "Ablation study on message-passing depth",
+    next_milestone: "Ablation study on action-decoding depth",
     next_milestone_date: daysAgo(4),
-    github_url: "https://github.com/sim-lab/graphfm",
+    github_url: "https://github.com/sim-lab/ego-vla",
   });
   const molOpt = await projectRepository.create({
-    title: "Optimizing Molecular Binders over a Generative Docking Latent Space",
-    short_name: "MolOpt",
+    title: "Optimizing Manipulation Trajectories over a Learned World-Model Latent Space",
+    short_name: "TrajOpt",
     description:
-      "Gradient- and search-based optimization of small-molecule and peptide binders within the latent space of a pretrained generative docking model.",
+      "Gradient- and sampling-based trajectory optimization within the latent space of a pretrained world model for long-horizon manipulation tasks.",
     lead_person_id: emma.id,
     stage: "idea",
     health: "healthy",
@@ -219,10 +220,10 @@ export async function seedDemoWorkspace(): Promise<void> {
     next_milestone_date: daysFromNow(30),
   });
   const ppiNet = await projectRepository.create({
-    title: "Equivariant Graph Networks for Protein-Protein Interaction Site Prediction",
-    short_name: "PPI-Net",
+    title: "Predicting Human-Robot Interaction Trajectories for Safe Navigation",
+    short_name: "HRI-Net",
     description:
-      "E(n)-equivariant graph neural networks that predict protein-protein interaction interfaces from joint structural embeddings and residue-level contact profiles.",
+      "Equivariant trajectory-prediction models that anticipate nearby humans' motion for safe, socially-aware robot navigation.",
     lead_person_id: priya.id,
     stage: "ablation",
     health: "attention",
@@ -233,10 +234,10 @@ export async function seedDemoWorkspace(): Promise<void> {
     next_milestone_date: daysAgo(1),
   });
   const effBio = await projectRepository.create({
-    title: "Structured Distillation for Efficient, Deployable Biological Foundation Models",
-    short_name: "EffBio",
+    title: "Distilling Real-Time Vision-Language-Action Policies via Action Caching",
+    short_name: "FastVLA",
     description:
-      "Structured distillation and efficient attention variants for deploying large biological foundation models under realistic inference-latency budgets.",
+      "Action caching and structured distillation techniques for running large VLA policies at real-time control rates on embedded hardware.",
     lead_person_id: james.id,
     stage: "rebuttal",
     health: "healthy",
@@ -292,10 +293,11 @@ export async function seedDemoWorkspace(): Promise<void> {
     geoflow.id,
     marcus.id,
     {
-      summary: "Ran the full-scale flow-matching training run on the new backbone dataset.",
+      summary:
+        "Ran the full-scale diffusion-policy training run on the new multi-task manipulation dataset.",
       progress: "Loss curves look stable; sample quality improved over last checkpoint.",
       blockers: null,
-      next_steps: "Kick off large-scale sampling benchmark.",
+      next_steps: "Kick off large-scale manipulation benchmark.",
       health: "healthy",
       update_next_milestone: null,
       update_next_milestone_date: null,
@@ -320,10 +322,10 @@ export async function seedDemoWorkspace(): Promise<void> {
     scaleRep.id,
     priya.id,
     {
-      summary: "Completed the second baseline (contrastive pretraining objective).",
+      summary: "Completed the second baseline (recurrent state-space world model).",
       progress: "Baseline underperforms our method by 4 points on the held-out set, as expected.",
       blockers: null,
-      next_steps: "Start the third baseline (masked modeling).",
+      next_steps: "Start the third baseline (model-free PPO).",
       health: "healthy",
       update_next_milestone: null,
       update_next_milestone_date: null,
@@ -335,7 +337,7 @@ export async function seedDemoWorkspace(): Promise<void> {
     alice.id,
     {
       summary: "Implemented the conditioning mechanism and ran a first small-scale test.",
-      progress: "Conditional samples respect the target constraint in ~60% of cases.",
+      progress: "Generated grasps satisfy the task constraint in ~60% of cases.",
       blockers: null,
       next_steps: "Scale up to the full conditioning set.",
       health: "healthy",
@@ -377,7 +379,8 @@ export async function seedDemoWorkspace(): Promise<void> {
     ppiNet.id,
     priya.id,
     {
-      summary: "Waiting on a revised interface dataset from the Green lab collaboration.",
+      summary:
+        "Waiting on a revised pedestrian-trajectory dataset from the Green lab collaboration.",
       progress: "No new experiments run this cycle.",
       blockers: "Dataset delivery has slipped twice; need to confirm a firm date.",
       next_steps: "Confirm dataset delivery date with Dr. Green.",
@@ -404,7 +407,7 @@ export async function seedDemoWorkspace(): Promise<void> {
 
   await milestoneRepository.create({
     project_id: geoflow.id,
-    title: "Baseline flow-matching model trained",
+    title: "Baseline diffusion-policy model trained",
     description: null,
     status: "completed",
     due_date: daysAgo(40),
@@ -412,7 +415,7 @@ export async function seedDemoWorkspace(): Promise<void> {
   });
   await milestoneRepository.create({
     project_id: geoflow.id,
-    title: "Full-scale backbone generation benchmark",
+    title: "Full-scale multi-task manipulation benchmark",
     description: null,
     status: "in_progress",
     due_date: daysFromNow(12),
@@ -420,7 +423,7 @@ export async function seedDemoWorkspace(): Promise<void> {
   });
   await milestoneRepository.create({
     project_id: funcRegion.id,
-    title: "Submit to ISMB",
+    title: "Submit to CoRL",
     description: null,
     status: "in_progress",
     due_date: daysFromNow(5),
@@ -444,7 +447,7 @@ export async function seedDemoWorkspace(): Promise<void> {
   });
   await milestoneRepository.create({
     project_id: graphFM.id,
-    title: "Ablation study on message-passing depth",
+    title: "Ablation study on action-decoding depth",
     description: null,
     status: "in_progress",
     due_date: daysAgo(4),
@@ -485,19 +488,20 @@ export async function seedDemoWorkspace(): Promise<void> {
 
   const m1 = await meetingRepository.create(pi, {
     project_id: geoflow.id,
-    title: "FlowBB weekly sync",
+    title: "DiffPolicy weekly sync",
     meeting_type: "project",
     meeting_date: daysAgo(3),
     attendee_person_ids: [marcus.id, tom.id],
     progress: "Full-scale training run completed successfully.",
     results: "Sample quality improved over the previous checkpoint.",
     blockers: null,
-    decisions: "Proceed with the large-scale sampling benchmark before requesting more compute.",
+    decisions:
+      "Proceed with the large-scale manipulation benchmark before requesting more compute.",
     next_steps: "Marcus to kick off the benchmark run this week.",
   });
   const m2 = await meetingRepository.create(pi, {
     project_id: graphFM.id,
-    title: "GraphFM check-in",
+    title: "EgoVLA check-in",
     meeting_type: "project",
     meeting_date: daysAgo(18),
     attendee_person_ids: [alice.id, pi],
@@ -514,15 +518,15 @@ export async function seedDemoWorkspace(): Promise<void> {
     meeting_date: daysAgo(7),
     attendee_person_ids: [pi, alice.id, marcus.id, priya.id, james.id],
     progress: "Round-robin project updates from all active projects.",
-    results: "FlowBB and CondGen both showing strong early results.",
+    results: "DiffPolicy and CondGrasp both showing strong early results.",
     blockers: null,
     decisions:
-      "Lab will prioritize compute allocation for FlowBB's benchmark run over the next two weeks.",
+      "Lab will prioritize compute allocation for DiffPolicy's benchmark run over the next two weeks.",
     next_steps: "Sarah to coordinate compute allocation with IT.",
   });
   const m4 = await meetingRepository.create(pi, {
     project_id: effBio.id,
-    title: "EffBio rebuttal planning",
+    title: "FastVLA rebuttal planning",
     meeting_type: "project",
     meeting_date: daysAgo(2),
     attendee_person_ids: [james.id, pi],
@@ -537,19 +541,19 @@ export async function seedDemoWorkspace(): Promise<void> {
     meeting_type: "one_on_one",
     meeting_date: daysAgo(5),
     attendee_person_ids: [pi, alice.id],
-    progress: "Discussed GraphFM blockers and PhD progress overall.",
+    progress: "Discussed EgoVLA blockers and PhD progress overall.",
     results: null,
     blockers: "Scheduler bug still unresolved; affecting Alice's ability to make progress.",
     decisions: "Alice will spend the interim time on the paper draft instead of waiting idle.",
-    next_steps: "Alice to draft the GraphFM methods section while blocked.",
+    next_steps: "Alice to draft the EgoVLA methods section while blocked.",
   });
   const m6 = await meetingRepository.create(pi, {
     project_id: ppiNet.id,
-    title: "PPI-Net / Green lab sync",
+    title: "HRI-Net / Green lab sync",
     meeting_type: "collaboration",
     meeting_date: daysAgo(15),
     attendee_person_ids: [priya.id, rachel.id],
-    progress: "Reviewed current interface dataset quality issues.",
+    progress: "Reviewed current pedestrian-trajectory dataset quality issues.",
     results: null,
     blockers: "Dataset delivery has slipped twice.",
     decisions:
@@ -561,7 +565,7 @@ export async function seedDemoWorkspace(): Promise<void> {
     {
       project_id: geoflow.id,
       assignee_person_id: marcus.id,
-      title: "Kick off large-scale sampling benchmark run",
+      title: "Kick off large-scale manipulation benchmark run",
       description: null,
       status: "in_progress",
       priority: "high",
@@ -583,7 +587,7 @@ export async function seedDemoWorkspace(): Promise<void> {
   );
   await actionItemRepository.create({
     assignee_person_id: pi,
-    title: "Coordinate compute allocation for FlowBB benchmark",
+    title: "Coordinate compute allocation for DiffPolicy benchmark",
     description: null,
     status: "open",
     priority: "high",
@@ -593,7 +597,7 @@ export async function seedDemoWorkspace(): Promise<void> {
     {
       project_id: effBio.id,
       assignee_person_id: james.id,
-      title: "Finalize EffBio rebuttal text",
+      title: "Finalize FastVLA rebuttal text",
       description: null,
       status: "in_progress",
       priority: "urgent",
@@ -604,7 +608,7 @@ export async function seedDemoWorkspace(): Promise<void> {
   await actionItemRepository.create({
     project_id: graphFM.id,
     assignee_person_id: alice.id,
-    title: "Draft GraphFM methods section",
+    title: "Draft EgoVLA methods section",
     description: null,
     status: "open",
     priority: "medium",
@@ -614,7 +618,7 @@ export async function seedDemoWorkspace(): Promise<void> {
     {
       project_id: ppiNet.id,
       assignee_person_id: priya.id,
-      title: "Follow up in writing on PPI dataset delivery date",
+      title: "Follow up in writing on HRI dataset delivery date",
       description: null,
       status: "open",
       priority: "high",
@@ -634,7 +638,7 @@ export async function seedDemoWorkspace(): Promise<void> {
   await actionItemRepository.create({
     project_id: scaleRep.id,
     assignee_person_id: tom.id,
-    title: "Set up masked-modeling baseline training config",
+    title: "Set up world-model baseline training config",
     description: null,
     status: "open",
     priority: "medium",
@@ -643,9 +647,9 @@ export async function seedDemoWorkspace(): Promise<void> {
 
   const pub1 = await publicationRepository.create({
     project_id: funcRegion.id,
-    title: "Predicting Ligand-Binding Pockets from AlphaFold Structures with Graph Neural Networks",
+    title: "Real-Time Semantic Gaussian Splatting SLAM for Dynamic Indoor Environments",
     status: "drafting",
-    venue: "ISMB 2027",
+    venue: "CoRL 2027",
     submission_deadline: dateOnly(daysFromNow(5)),
     submission_date: null,
     acceptance_date: null,
@@ -660,7 +664,8 @@ export async function seedDemoWorkspace(): Promise<void> {
   });
   await publicationRepository.create({
     project_id: effBio.id,
-    title: "Structured Distillation for Efficient Biological Foundation Models",
+    title:
+      "Action Caching and Structured Distillation for Real-Time Vision-Language-Action Policies",
     status: "rebuttal",
     venue: "NeurIPS 2026",
     submission_deadline: null,
@@ -677,7 +682,7 @@ export async function seedDemoWorkspace(): Promise<void> {
   });
   const pub3 = await publicationRepository.create({
     project_id: graphFM.id,
-    title: "Iterative Equivariant Refinement for Structural Biology Foundation Models",
+    title: "Egocentric Video Pretraining with Iterative Action-Refinement Decoding",
     status: "experiments",
     venue: "ICML 2027",
     submission_deadline: dateOnly(daysFromNow(45)),
@@ -694,7 +699,7 @@ export async function seedDemoWorkspace(): Promise<void> {
   });
   await publicationRepository.create({
     project_id: geoflow.id,
-    title: "SE(3)-Equivariant Flow Matching for De Novo Protein Backbone Generation",
+    title: "Diffusion Policies for Language-Conditioned Robotic Manipulation",
     status: "idea",
     venue: null,
     submission_deadline: dateOnly(daysFromNow(90)),
@@ -711,9 +716,9 @@ export async function seedDemoWorkspace(): Promise<void> {
   });
   await publicationRepository.create({
     project_id: ppiNet.id,
-    title: "Predicting Protein-Protein Interaction Interfaces from Structural Embeddings",
+    title: "Predicting Human-Robot Interaction Trajectories for Safe Navigation",
     status: "internal_review",
-    venue: "RECOMB 2027",
+    venue: "ICRA 2027",
     submission_deadline: dateOnly(daysFromNow(20)),
     submission_date: null,
     acceptance_date: null,
@@ -731,14 +736,14 @@ export async function seedDemoWorkspace(): Promise<void> {
   // it — it's here only to demonstrate what a completed publication record
   // looks like, using genuine bibliographic data instead of an invented DOI.
   await publicationRepository.create({
-    title: "Evolutionary-scale prediction of atomic-level protein structure with a language model",
+    title: "Diffusion Policy: Visuomotor Policy Learning via Action Diffusion",
     status: "published",
-    venue: "Science",
+    venue: "The International Journal of Robotics Research",
     submission_deadline: null,
     submission_date: null,
     acceptance_date: null,
-    publication_date: "2023-03-17",
-    doi: "10.1126/science.ade2574",
+    publication_date: "2024-10-11",
+    doi: "10.1177/02783649241273668",
     arxiv_url: null,
     overleaf_url: null,
     code_url: null,
@@ -799,17 +804,18 @@ export async function seedDemoWorkspace(): Promise<void> {
   // ---- Tier 2: research questions, hypotheses, evidence -------------------
   const q1 = await researchQuestionRepository.create({
     project_id: graphFM.id,
-    question: "Does recurrent metric refinement improve 3D realization?",
+    question: "Does iterative action-refinement decoding improve long-horizon task success?",
     priority: "important",
   });
   const q2 = await researchQuestionRepository.create({
     project_id: graphFM.id,
-    question: "Is the gain larger in higher-dimensional structures?",
+    question: "Is the gain larger for longer action-chunk horizons?",
   });
   await researchQuestionRepository.update(q2.id, { status: "investigating" });
   const q3 = await researchQuestionRepository.create({
     project_id: geoflow.id,
-    question: "Does the flow-matching objective remain equivariant under the recurrent metric?",
+    question:
+      "Does the diffusion policy's action distribution stay consistent under iterative refinement?",
   });
   await researchQuestionRepository.update(q3.id, { status: "answered", resolved_at: nowIso() });
 
@@ -817,7 +823,7 @@ export async function seedDemoWorkspace(): Promise<void> {
     project_id: graphFM.id,
     research_question_id: q1.id,
     statement:
-      "Recurrent metric refinement improves 3D structural realization over a fixed metric.",
+      "Iterative action-refinement decoding improves long-horizon task success over single-shot decoding.",
     confidence: "medium",
   });
   await hypothesisRepository.update(h1.id, { status: "supported", resolved_at: nowIso() });
@@ -825,7 +831,8 @@ export async function seedDemoWorkspace(): Promise<void> {
     hypothesis_id: h1.id,
     project_id: graphFM.id,
     type: "experiment",
-    summary: "RM-GEL improves 3D RMSE by 0.8% over the hybrid baseline",
+    summary:
+      "Iterative decoding improves task success rate by 8 points over the single-shot baseline",
     direction: "supports",
     source_type: "project_update",
   });
@@ -840,7 +847,7 @@ export async function seedDemoWorkspace(): Promise<void> {
   const h2 = await hypothesisRepository.create({
     project_id: graphFM.id,
     research_question_id: q1.id,
-    statement: "The gain from recurrent refinement increases with geometric coupling strength.",
+    statement: "The gain from iterative refinement increases with action-chunk horizon length.",
     confidence: "low",
   });
   await hypothesisRepository.update(h2.id, { status: "testing" });
@@ -848,18 +855,18 @@ export async function seedDemoWorkspace(): Promise<void> {
     hypothesis_id: h2.id,
     project_id: graphFM.id,
     type: "analysis",
-    summary: "Ablation sweep on coupling strength inconclusive so far",
+    summary: "Ablation sweep on chunk horizon length inconclusive so far",
     direction: "mixed",
   });
 
   await hypothesisRepository.create({
     project_id: graphFM.id,
-    statement: "The approach generalizes to small-molecule generation, not just proteins.",
+    statement: "The approach generalizes to bimanual manipulation, not just single-arm tasks.",
     confidence: null,
   });
 
   await grantRepository.create({
-    title: "NSF CAREER: Geometric Foundations of Structural Biology ML",
+    title: "NSF CAREER: Geometric Foundations of Embodied Machine Learning",
     funder: "NSF",
     program: "CAREER",
     status: "active",
@@ -873,9 +880,9 @@ export async function seedDemoWorkspace(): Promise<void> {
     notes: null,
   });
   await grantRepository.create({
-    title: "NIH R01: Graph Neural Networks for Ligand-Binding Site Discovery",
-    funder: "NIH",
-    program: "R01",
+    title: "ONR: Real-Time Semantic Scene Reconstruction for Autonomous Robots",
+    funder: "Office of Naval Research",
+    program: "Young Investigator Program",
     status: "preparing",
     deadline: dateOnly(daysFromNow(25)),
     start_date: null,
@@ -884,12 +891,12 @@ export async function seedDemoWorkspace(): Promise<void> {
     currency: "USD",
     pi_person_id: pi,
     description:
-      "Proposal in preparation to fund binding-site prediction work building on PocketGNN.",
+      "Proposal in preparation to fund real-time scene-reconstruction work building on GSplatSLAM.",
     notes: null,
   });
   await grantRepository.create({
-    title: "Industry gift: Generative Protein Design",
-    funder: "BioGen Partners",
+    title: "Industry gift: Vision-Language-Action Models",
+    funder: "Atlas Robotics",
     program: null,
     status: "awarded",
     deadline: null,
@@ -898,11 +905,11 @@ export async function seedDemoWorkspace(): Promise<void> {
     amount: 150000,
     currency: "USD",
     pi_person_id: pi,
-    description: "Unrestricted gift supporting generative protein design research.",
+    description: "Unrestricted gift supporting vision-language-action model research.",
     notes: null,
   });
   await grantRepository.create({
-    title: "DOE Early Career: Efficient Biological Foundation Models",
+    title: "DOE Early Career: Efficient Vision-Language-Action Foundation Models",
     funder: "Department of Energy",
     program: "Early Career",
     status: "submitted",
@@ -912,7 +919,8 @@ export async function seedDemoWorkspace(): Promise<void> {
     amount: 875000,
     currency: "USD",
     pi_person_id: pi,
-    description: "Submitted proposal for efficient, deployable biological foundation models.",
+    description:
+      "Submitted proposal for efficient, deployable vision-language-action foundation models.",
     notes: null,
   });
 
