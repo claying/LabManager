@@ -31,15 +31,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Sync app version with tag
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          node -e "
-            const fs = require('fs');
-            const path = 'apps/desktop/src-tauri/tauri.conf.json';
-            const conf = JSON.parse(fs.readFileSync(path, 'utf8'));
-            conf.version = '$VERSION';
-            fs.writeFileSync(path, JSON.stringify(conf, null, 2) + '\n');
-          "
+        env:
+          RAW_VERSION: ${{ github.ref_name }}
+        run: node .github/scripts/sync-version.cjs
 
       - uses: tauri-apps/tauri-action@v0
         env:
