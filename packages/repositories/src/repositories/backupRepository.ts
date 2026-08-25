@@ -185,7 +185,7 @@ export const backupRepository: BackupRepository = {
       preResetBackupPath = pre.path;
     }
 
-    // Clears every table in place on the SAME live connection, instead of
+    // Clears every table in place on the SAME connection URL, instead of
     // deleting the file and reopening/relaunching: tauri-plugin-sql only
     // runs a database's registered migrations once per process lifetime
     // (see commands.rs::load), so a reopened connection finds none left to
@@ -193,6 +193,19 @@ export const backupRepository: BackupRepository = {
     // the existing schema intact, so nothing needs to reload or relaunch —
     // the caller just invalidates queries and the app's own "no workspace"
     // routing gate takes it back to onboarding reactively.
+    //
+    // Deliberately NOT wrapped in an explicit BEGIN/COMMIT or a
+    // pragma foreign_keys toggle: tauri-plugin-sql opens a real
+    // multi-connection pool (sqlx's Pool::connect with no max_connections
+    // override), so separate execute() calls from here aren't guaranteed
+    // to land on the same physical connection — a COMMIT can hit a
+    // connection that never saw the matching BEGIN and fail with "no
+    // transaction is active", and a pragma toggle can miss the connection
+    // that ends up running the deletes. Every foreign key in the schema
+    // uses `on delete cascade` or `on delete set null` (checked against
+    // every migration file), never a bare/no-action FK, so plain
+    // individually-auto-committing deletes can't fail on constraint
+    // ordering regardless of which connection each one runs on.
     const db = await getDb();
     const tables = await db.select<{ name: string }[]>(
       `select name from sqlite_master
@@ -201,19 +214,8 @@ export const backupRepository: BackupRepository = {
          and name != '_sqlx_migrations'
          and name not like 'search_index%'`,
     );
-
-    await db.execute("pragma foreign_keys = off");
-    try {
-      await db.execute("begin");
-      for (const { name } of tables) {
-        await db.execute(`delete from "${name}"`);
-      }
-      await db.execute("commit");
-    } catch (error) {
-      await db.execute("rollback");
-      throw error;
-    } finally {
-      await db.execute("pragma foreign_keys = on");
+    for (const { name } of tables) {
+      await db.execute(`delete from "${name}"`);
     }
     await db.execute("vacuum");
 
