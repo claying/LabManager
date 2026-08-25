@@ -1,7 +1,10 @@
 import Database from "@tauri-apps/plugin-sql";
 import { appDataDir, join } from "@tauri-apps/api/path";
 
-const DB_FILENAME = "pi-research-os.db";
+// `tauri dev` and a released build share the same bundle identifier, so
+// they'd otherwise resolve to the same app-data directory and clobber each
+// other's data. Vite's DEV flag keeps dev builds on a separate file.
+const DB_FILENAME = import.meta.env.DEV ? "pi-research-os.dev.db" : "pi-research-os.db";
 const DB_URL = `sqlite:${DB_FILENAME}`;
 
 let dbPromise: Promise<Database> | null = null;

@@ -46,3 +46,6 @@ Thumbs.db
 **/target/
 Cargo.lock
 !/apps/desktop/src-tauri/Cargo.lock
+
+# tauri (auto-regenerated from capabilities.json + installed plugins)
+apps/desktop/src-tauri/gen/schemas/
