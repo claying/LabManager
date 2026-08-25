@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { personSchema, type PersonInput } from "@pi-os/domain";
@@ -71,8 +71,21 @@ export function PersonFormDialog({
     defaultValues: defaultsFor(person),
   });
 
+  // Kept separate from the form's research_interests array: binding the
+  // input's value to `field.value.join(", ")` re-derives the displayed text
+  // from an already-comma-split-and-trimmed array on every keystroke, which
+  // silently eats a trailing space the instant it's typed (it gets trimmed
+  // away before the next render). This tracks exactly what's on screen;
+  // field.onChange still gets the parsed array on every change.
+  const [interestsText, setInterestsText] = useState(
+    defaultsFor(person).research_interests.join(", "),
+  );
+
   useEffect(() => {
-    if (open) form.reset(defaultsFor(person));
+    if (open) {
+      form.reset(defaultsFor(person));
+      setInterestsText(defaultsFor(person).research_interests.join(", "));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, person]);
 
@@ -211,15 +224,16 @@ export function PersonFormDialog({
                   <FormLabel>Research interests (comma separated)</FormLabel>
                   <FormControl>
                     <Input
-                      value={field.value.join(", ")}
-                      onChange={(e) =>
+                      value={interestsText}
+                      onChange={(e) => {
+                        setInterestsText(e.target.value);
                         field.onChange(
                           e.target.value
                             .split(",")
                             .map((s) => s.trim())
                             .filter(Boolean),
-                        )
-                      }
+                        );
+                      }}
                       placeholder="protein design, generative models"
                     />
                   </FormControl>

@@ -32,9 +32,8 @@ import { toast } from "@pi-os/ui/components/sonner";
 import { PageHeader } from "@pi-os/ui/components/domain/page-header";
 import { TopBar } from "../components/app-shell/topbar";
 import { checkForUpdate, installUpdate } from "../lib/native/updater";
+import { getAppVersion } from "../lib/native/app-info";
 import type { Update } from "@tauri-apps/plugin-updater";
-
-const APP_VERSION = "0.1.0";
 
 type UpdateState = "idle" | "checking" | "up_to_date" | "available" | "installing" | "error";
 
@@ -179,6 +178,13 @@ export default function SettingsPage() {
 
   const [updateState, setUpdateState] = useState<UpdateState>("idle");
   const [pendingUpdate, setPendingUpdate] = useState<Update | null>(null);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    getAppVersion()
+      .then(setAppVersion)
+      .catch(() => setAppVersion(null));
+  }, []);
 
   async function onCheckForUpdates() {
     setUpdateState("checking");
@@ -352,7 +358,9 @@ export default function SettingsPage() {
             <CardTitle>Application</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="text-muted-foreground text-sm">PI Research OS — version {APP_VERSION}</p>
+            <p className="text-muted-foreground text-sm">
+              PI Research OS — version {appVersion ?? "…"}
+            </p>
             <div className="flex items-center gap-2">
               {updateState === "available" && pendingUpdate ? (
                 <Button size="sm" onClick={onInstallUpdate} disabled={updateState !== "available"}>

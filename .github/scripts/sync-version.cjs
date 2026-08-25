@@ -13,7 +13,9 @@ while (parts.length < 3) parts.push("0");
 const version = parts.slice(0, 3).join(".");
 
 if (!/^\d+\.\d+\.\d+$/.test(version)) {
-  console.error(`Tag "${process.env.RAW_VERSION}" doesn't resolve to a valid semver version (got "${version}")`);
+  console.error(
+    `Tag "${process.env.RAW_VERSION}" doesn't resolve to a valid semver version (got "${version}")`,
+  );
   process.exit(1);
 }
 
