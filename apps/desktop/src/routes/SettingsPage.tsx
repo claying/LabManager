@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { confirm } from "@tauri-apps/plugin-dialog";
+import { relaunch } from "@tauri-apps/plugin-process";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useActiveWorkspace as useActiveWorkspaceCtx } from "../lib/workspace-context";
 import {
@@ -115,8 +116,12 @@ export default function SettingsPage() {
     try {
       const result = await restoreBackup.mutateAsync();
       if (!result) return;
-      toast.success("Backup restored — reloading…");
-      setTimeout(() => window.location.reload(), 800);
+      toast.success("Backup restored — restarting…");
+      // A webview-only reload wouldn't re-run migrations against the
+      // restored file, since tauri-plugin-sql only applies each database's
+      // migrations once per process lifetime. A full relaunch is needed so
+      // an older backup gets forward-migrated correctly.
+      setTimeout(() => void relaunch(), 800);
     } catch (error) {
       toast.error("Restore failed", {
         description: error instanceof Error ? error.message : undefined,
@@ -143,7 +148,12 @@ export default function SettingsPage() {
         result.preResetBackupPath ? "Workspace reset — backup saved" : "Workspace reset",
         { description: result.preResetBackupPath ?? undefined },
       );
-      setTimeout(() => window.location.reload(), 800);
+      // Same reason as restore: a webview-only reload reopens the freshly
+      // recreated (empty) database file without re-running migrations,
+      // since tauri-plugin-sql only applies migrations once per process
+      // lifetime — leaving it with no tables at all. A full relaunch makes
+      // the Rust side re-register and re-run them from scratch.
+      setTimeout(() => void relaunch(), 800);
     } catch (error) {
       toast.error("Reset failed", {
         description: error instanceof Error ? error.message : undefined,
