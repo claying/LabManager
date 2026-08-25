@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "PI Research OS",
+  "version": "0.1.0",
+  "identifier": "com.piresearchos.app",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "PI Research OS",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 960,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": true,
+    "publisher": "PI Research OS",
+    "copyright": "Copyright © 2026 PI Research OS",
+    "category": "Productivity",
+    "shortDescription": "Offline research lab management for a single PI",
+    "longDescription": "PI Research OS is a fully offline, single-user desktop app for managing a research lab: projects, people, milestones, weekly updates, meetings, publications, and grants.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": ["https://github.com/claying/LabManager/releases/latest/download/latest.json"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEYzQTAzQkQxNTQ5NzQzRTQKUldUa1E1ZFUwVHVnODB5SHk0aG5aVG5tRlBiTTJnK0YyMlgxMVYwM29CcE54RUpWVlNUU0grN0gK"
+    }
+  }
+}
