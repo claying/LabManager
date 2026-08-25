@@ -76,6 +76,13 @@ describe("SQLite migrations", () => {
       "paper_readiness_items",
       "project_stage_history",
       "project_health_history",
+      "project_relations",
+      "artifacts",
+      "file_index_roots",
+      "file_index",
+      "saved_views",
+      "favorites",
+      "grant_projects",
     ]) {
       expect(tables).toContain(expected);
     }
@@ -590,5 +597,287 @@ describe("workspace singleton", () => {
     };
     expect(row.name).toBe("SIM Lab");
     expect(row.pi_person_id).toBe("pi1");
+  });
+});
+
+describe("Tier 3: project relations", () => {
+  let db: DatabaseSync;
+  beforeEach(() => {
+    db = freshDb();
+    db.prepare("insert into projects (id, title) values ('proj1', 'FlowBB')").run();
+    db.prepare("insert into projects (id, title) values ('proj2', 'EgoVLA')").run();
+  });
+
+  it("cascade-deletes a relation when either side project is deleted", () => {
+    db.prepare(
+      "insert into project_relations (id, project_id, related_project_id, relation_type) values ('r1', 'proj1', 'proj2', 'depends_on')",
+    ).run();
+    db.prepare("delete from projects where id = 'proj2'").run();
+    expect(
+      (db.prepare("select count(*) as n from project_relations").get() as { n: number }).n,
+    ).toBe(0);
+  });
+
+  it("rejects an invalid relation_type via CHECK", () => {
+    expect(() =>
+      db
+        .prepare(
+          "insert into project_relations (id, project_id, related_project_id, relation_type) values ('r1', 'proj1', 'proj2', 'not-a-type')",
+        )
+        .run(),
+    ).toThrow();
+  });
+
+  it("rejects a project related to itself via CHECK", () => {
+    expect(() =>
+      db
+        .prepare(
+          "insert into project_relations (id, project_id, related_project_id, relation_type) values ('r1', 'proj1', 'proj1', 'related')",
+        )
+        .run(),
+    ).toThrow();
+  });
+
+  it("enforces one relation of a given type per project pair", () => {
+    db.prepare(
+      "insert into project_relations (id, project_id, related_project_id, relation_type) values ('r1', 'proj1', 'proj2', 'related')",
+    ).run();
+    expect(() =>
+      db
+        .prepare(
+          "insert into project_relations (id, project_id, related_project_id, relation_type) values ('r2', 'proj1', 'proj2', 'related')",
+        )
+        .run(),
+    ).toThrow();
+  });
+});
+
+describe("Tier 3: artifacts", () => {
+  let db: DatabaseSync;
+  beforeEach(() => {
+    db = freshDb();
+    db.prepare("insert into projects (id, title) values ('proj1', 'FlowBB')").run();
+  });
+
+  it("cascade-deletes artifacts when the project is deleted", () => {
+    db.prepare(
+      "insert into artifacts (id, project_id, type, title) values ('a1', 'proj1', 'code', 'graphfm/')",
+    ).run();
+    db.prepare("delete from projects where id = 'proj1'").run();
+    expect((db.prepare("select count(*) as n from artifacts").get() as { n: number }).n).toBe(0);
+  });
+
+  it("rejects an invalid artifact type via CHECK", () => {
+    expect(() =>
+      db
+        .prepare(
+          "insert into artifacts (id, project_id, type, title) values ('a1', 'proj1', 'not-a-type', 'x')",
+        )
+        .run(),
+    ).toThrow();
+  });
+
+  it("auto-bumps updated_at on update", () => {
+    db.prepare(
+      "insert into artifacts (id, project_id, type, title, created_at, updated_at) values ('a1', 'proj1', 'code', 'x', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z')",
+    ).run();
+    db.prepare("update artifacts set title = 'y' where id = 'a1'").run();
+    const row = db.prepare("select updated_at from artifacts where id = 'a1'").get() as {
+      updated_at: string;
+    };
+    expect(row.updated_at).not.toBe("2026-01-01T00:00:00.000Z");
+  });
+});
+
+describe("Tier 3: local file indexing", () => {
+  let db: DatabaseSync;
+  beforeEach(() => {
+    db = freshDb();
+    db.prepare("insert into projects (id, title) values ('proj1', 'FlowBB')").run();
+  });
+
+  it("cascade-deletes file_index rows when the root is deleted, and roots when the project is deleted", () => {
+    db.prepare(
+      "insert into file_index_roots (id, project_id, category, root_path) values ('root1', 'proj1', 'code', '/tmp/graphfm')",
+    ).run();
+    db.prepare(
+      "insert into file_index (id, root_id, project_id, category, name, relative_path) values ('f1', 'root1', 'proj1', 'code', 'main.py', 'main.py')",
+    ).run();
+
+    db.prepare("delete from file_index_roots where id = 'root1'").run();
+    expect((db.prepare("select count(*) as n from file_index").get() as { n: number }).n).toBe(0);
+
+    db.prepare(
+      "insert into file_index_roots (id, project_id, category, root_path) values ('root2', 'proj1', 'code', '/tmp/graphfm')",
+    ).run();
+    db.prepare("delete from projects where id = 'proj1'").run();
+    expect(
+      (db.prepare("select count(*) as n from file_index_roots").get() as { n: number }).n,
+    ).toBe(0);
+  });
+
+  it("enforces one entry per relative path within a root", () => {
+    db.prepare(
+      "insert into file_index_roots (id, project_id, category, root_path) values ('root1', 'proj1', 'code', '/tmp/graphfm')",
+    ).run();
+    db.prepare(
+      "insert into file_index (id, root_id, project_id, category, name, relative_path) values ('f1', 'root1', 'proj1', 'code', 'main.py', 'src/main.py')",
+    ).run();
+    expect(() =>
+      db
+        .prepare(
+          "insert into file_index (id, root_id, project_id, category, name, relative_path) values ('f2', 'root1', 'proj1', 'code', 'main.py', 'src/main.py')",
+        )
+        .run(),
+    ).toThrow();
+  });
+
+  it("indexes a file's name and content for search, and removes it from the index on delete", () => {
+    db.prepare(
+      "insert into file_index_roots (id, project_id, category, root_path) values ('root1', 'proj1', 'code', '/tmp/graphfm')",
+    ).run();
+    db.prepare(
+      "insert into file_index (id, root_id, project_id, category, name, relative_path, indexed_body) values ('f1', 'root1', 'proj1', 'code', 'evaluation.py', 'src/evaluation.py', 'def compute_rmse(): pass')",
+    ).run();
+
+    expect(
+      (
+        db
+          .prepare("select entity_id from search_index where search_index match 'evaluation'")
+          .all() as { entity_id: string }[]
+      ).map((r) => r.entity_id),
+    ).toContain("f1");
+    expect(
+      (
+        db.prepare("select entity_id from search_index where search_index match 'rmse'").all() as {
+          entity_id: string;
+        }[]
+      ).map((r) => r.entity_id),
+    ).toContain("f1");
+
+    db.prepare("delete from file_index where id = 'f1'").run();
+    expect(
+      (
+        db
+          .prepare(
+            "select count(*) as n from search_index where entity_type = 'file' and entity_id = 'f1'",
+          )
+          .get() as { n: number }
+      ).n,
+    ).toBe(0);
+  });
+});
+
+describe("Tier 3: saved views and favorites", () => {
+  it("rejects an invalid saved_views entity_type via CHECK", () => {
+    const db = freshDb();
+    expect(() =>
+      db
+        .prepare(
+          "insert into saved_views (id, name, entity_type, filters) values ('v1', 'ICLR papers', 'not-a-type', '{}')",
+        )
+        .run(),
+    ).toThrow();
+  });
+
+  it("auto-bumps saved_views.updated_at on update", () => {
+    const db = freshDb();
+    db.prepare(
+      "insert into saved_views (id, name, entity_type, filters, created_at, updated_at) values ('v1', 'ICLR papers', 'publications', '{}', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z')",
+    ).run();
+    db.prepare("update saved_views set pinned = 1 where id = 'v1'").run();
+    const row = db.prepare("select updated_at from saved_views where id = 'v1'").get() as {
+      updated_at: string;
+    };
+    expect(row.updated_at).not.toBe("2026-01-01T00:00:00.000Z");
+  });
+
+  it("enforces one favorite per (entity_type, entity_id) pair", () => {
+    const db = freshDb();
+    db.prepare(
+      "insert into favorites (id, entity_type, entity_id) values ('f1', 'project', 'proj1')",
+    ).run();
+    expect(() =>
+      db
+        .prepare(
+          "insert into favorites (id, entity_type, entity_id) values ('f2', 'project', 'proj1')",
+        )
+        .run(),
+    ).toThrow();
+  });
+
+  it("rejects an invalid favorites entity_type via CHECK", () => {
+    const db = freshDb();
+    expect(() =>
+      db
+        .prepare(
+          "insert into favorites (id, entity_type, entity_id) values ('f1', 'not-a-type', 'x')",
+        )
+        .run(),
+    ).toThrow();
+  });
+});
+
+describe("Tier 3: grant-project links and decision-meeting links", () => {
+  let db: DatabaseSync;
+  beforeEach(() => {
+    db = freshDb();
+    db.prepare("insert into projects (id, title) values ('proj1', 'FlowBB')").run();
+    db.prepare("insert into grants (id, title) values ('g1', 'NSF CAREER')").run();
+  });
+
+  it("cascade-deletes grant_projects when either the grant or the project is deleted", () => {
+    db.prepare(
+      "insert into grant_projects (id, grant_id, project_id) values ('gp1', 'g1', 'proj1')",
+    ).run();
+    db.prepare("delete from grants where id = 'g1'").run();
+    expect((db.prepare("select count(*) as n from grant_projects").get() as { n: number }).n).toBe(
+      0,
+    );
+  });
+
+  it("enforces one link per (grant, project) pair", () => {
+    db.prepare(
+      "insert into grant_projects (id, grant_id, project_id) values ('gp1', 'g1', 'proj1')",
+    ).run();
+    expect(() =>
+      db
+        .prepare(
+          "insert into grant_projects (id, grant_id, project_id) values ('gp2', 'g1', 'proj1')",
+        )
+        .run(),
+    ).toThrow();
+  });
+
+  it("sets decision_requests.meeting_id to null when the meeting is deleted", () => {
+    db.prepare("insert into meetings (id, title) values ('m1', 'Sync')").run();
+    db.prepare(
+      "insert into decision_requests (id, title, meeting_id) values ('d1', 'Which venue?', 'm1')",
+    ).run();
+    db.prepare("delete from meetings where id = 'm1'").run();
+    const row = db.prepare("select meeting_id from decision_requests where id = 'd1'").get() as {
+      meeting_id: string | null;
+    };
+    expect(row.meeting_id).toBeNull();
+  });
+});
+
+describe("Tier 3: project closeout columns", () => {
+  it("stores outcome/closeout_note/closed_at on a project", () => {
+    const db = freshDb();
+    db.prepare("insert into projects (id, title) values ('proj1', 'FlowBB')").run();
+    db.prepare(
+      "update projects set outcome = 'ICLR paper', closeout_note = 'Great run', closed_at = '2027-08-01T00:00:00.000Z' where id = 'proj1'",
+    ).run();
+    const row = db
+      .prepare("select outcome, closeout_note, closed_at from projects where id = 'proj1'")
+      .get() as {
+      outcome: string;
+      closeout_note: string;
+      closed_at: string;
+    };
+    expect(row.outcome).toBe("ICLR paper");
+    expect(row.closeout_note).toBe("Great run");
+    expect(row.closed_at).toBe("2027-08-01T00:00:00.000Z");
   });
 });

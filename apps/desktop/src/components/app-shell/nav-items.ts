@@ -3,9 +3,11 @@ import {
   BarChart3,
   CalendarRange,
   FileText,
+  History,
   Home,
   Inbox,
   Lightbulb,
+  Network,
   PiggyBank,
   UsersRound,
   Users,
@@ -24,4 +26,6 @@ export const MAIN_NAV = [
   { href: "/ideas", label: "Ideas", icon: Lightbulb },
   { href: "/grants", label: "Grants", icon: PiggyBank },
   { href: "/calendar", label: "Calendar", icon: CalendarRange },
+  { href: "/memory", label: "Memory", icon: History },
+  { href: "/graph", label: "Graph", icon: Network },
 ] as const;

@@ -32,6 +32,12 @@ import type {
   SUBMISSION_HEALTH_STATUSES,
   SUBMISSION_PLAN_ITEM_STATUSES,
   VENUE_CATEGORIES,
+  PROJECT_RELATION_TYPES,
+  ARTIFACT_TYPES,
+  FILE_INDEX_CATEGORIES,
+  SAVED_VIEW_ENTITY_TYPES,
+  FAVORITE_ENTITY_TYPES,
+  MEMORY_EVENT_TYPES,
 } from "./options";
 
 export type PersonRole = (typeof PERSON_ROLES)[number];
@@ -60,6 +66,12 @@ export type VenueCategory = (typeof VENUE_CATEGORIES)[number];
 export type SubmissionPlanItemStatus = (typeof SUBMISSION_PLAN_ITEM_STATUSES)[number];
 export type PaperReadinessStatus = (typeof PAPER_READINESS_STATUSES)[number];
 export type SubmissionHealthStatus = (typeof SUBMISSION_HEALTH_STATUSES)[number];
+export type ProjectRelationType = (typeof PROJECT_RELATION_TYPES)[number];
+export type ArtifactType = (typeof ARTIFACT_TYPES)[number];
+export type FileIndexCategory = (typeof FILE_INDEX_CATEGORIES)[number];
+export type SavedViewEntityType = (typeof SAVED_VIEW_ENTITY_TYPES)[number];
+export type FavoriteEntityType = (typeof FAVORITE_ENTITY_TYPES)[number];
+export type MemoryEventType = (typeof MEMORY_EVENT_TYPES)[number];
 
 // ---- workspace -----------------------------------------------------------
 
@@ -151,6 +163,9 @@ export interface Project {
   paper_folder_path: string | null;
   results_folder_path: string | null;
   archived: boolean;
+  outcome: string | null;
+  closeout_note: string | null;
+  closed_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -177,7 +192,12 @@ export interface ProjectInsert {
   results_folder_path?: string | null;
 }
 
-export type ProjectUpdatePatch = Partial<ProjectInsert> & { archived?: boolean };
+export type ProjectUpdatePatch = Partial<ProjectInsert> & {
+  archived?: boolean;
+  outcome?: string | null;
+  closeout_note?: string | null;
+  closed_at?: string | null;
+};
 
 export interface ProjectMember {
   id: string;
@@ -422,6 +442,7 @@ export interface DecisionRequest {
   id: string;
   project_id: string | null;
   person_id: string | null;
+  meeting_id: string | null;
   title: string;
   context: string | null;
   options_json: string | null;
@@ -438,6 +459,7 @@ export interface DecisionRequest {
 export interface DecisionRequestInsert {
   project_id?: string | null;
   person_id?: string | null;
+  meeting_id?: string | null;
   title: string;
   context?: string | null;
   options?: string[];
@@ -813,6 +835,7 @@ export interface PublicationWithRelations extends Publication {
 export interface GrantWithRelations extends Grant {
   pi: PersonRef | null;
   members: (PersonRef & { grantRole: GrantMemberRole })[];
+  projects: { id: string; title: string }[];
 }
 
 export interface ActionItemWithRelations extends ActionItem {
@@ -823,4 +846,154 @@ export interface ActionItemWithRelations extends ActionItem {
 export interface PersonWithStats extends Person {
   active_project_count: number;
   led_project_count: number;
+}
+
+// ============================================================================
+// Tier 3
+// ============================================================================
+
+// ---- project relations -----------------------------------------------------
+
+export interface ProjectRelation {
+  id: string;
+  project_id: string;
+  related_project_id: string;
+  relation_type: ProjectRelationType;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface ProjectRelationInsert {
+  project_id: string;
+  related_project_id: string;
+  relation_type: ProjectRelationType;
+  notes?: string | null;
+}
+
+export interface ProjectRelationWithProject extends ProjectRelation {
+  related_project: { id: string; title: string; short_name: string | null };
+}
+
+// ---- artifacts ---------------------------------------------------------------
+
+export interface Artifact {
+  id: string;
+  project_id: string;
+  type: ArtifactType;
+  title: string;
+  local_path: string | null;
+  url: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ArtifactInsert {
+  project_id: string;
+  type: ArtifactType;
+  title: string;
+  local_path?: string | null;
+  url?: string | null;
+  notes?: string | null;
+}
+
+export type ArtifactUpdatePatch = Partial<Omit<ArtifactInsert, "project_id">>;
+
+// ---- local file indexing ------------------------------------------------------
+
+export interface FileIndexRoot {
+  id: string;
+  project_id: string;
+  category: FileIndexCategory;
+  root_path: string;
+  label: string | null;
+  last_indexed_at: string | null;
+  created_at: string;
+}
+
+export interface FileIndexEntry {
+  id: string;
+  root_id: string;
+  project_id: string;
+  category: FileIndexCategory;
+  name: string;
+  relative_path: string;
+  extension: string | null;
+  size_bytes: number;
+  modified_at: string | null;
+  indexed_body: string | null;
+  created_at: string;
+}
+
+export type FileIndexEntrySummary = Omit<FileIndexEntry, "indexed_body">;
+
+// ---- saved views ---------------------------------------------------------------
+
+export interface SavedView {
+  id: string;
+  name: string;
+  entity_type: SavedViewEntityType;
+  filters: string;
+  pinned: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SavedViewInsert {
+  name: string;
+  entity_type: SavedViewEntityType;
+  filters: string;
+  pinned?: boolean;
+}
+
+// ---- favorites -------------------------------------------------------------
+
+export interface Favorite {
+  id: string;
+  entity_type: FavoriteEntityType;
+  entity_id: string;
+  created_at: string;
+}
+
+// ---- research memory (derived, read-only) ---------------------------------
+
+export interface MemoryEvent {
+  type: MemoryEventType;
+  id: string;
+  date: string;
+  title: string;
+  summary: string | null;
+  project_id: string | null;
+  project_title: string | null;
+  person_id: string | null;
+  person_name: string | null;
+}
+
+// ---- relationship intelligence (derived, read-only) ------------------------
+
+export interface RelatedEntityRef {
+  id: string;
+  title: string;
+  kind:
+    | "project"
+    | "person"
+    | "publication"
+    | "decision"
+    | "meeting"
+    | "grant"
+    | "idea"
+    | "research_question"
+    | "hypothesis"
+    | "evidence";
+}
+
+export interface RelatedSummary {
+  projects: RelatedEntityRef[];
+  decisions: RelatedEntityRef[];
+  meetings: RelatedEntityRef[];
+  papers: RelatedEntityRef[];
+  grants: RelatedEntityRef[];
+  ideas: RelatedEntityRef[];
+  questions: RelatedEntityRef[];
+  evidence: RelatedEntityRef[];
 }

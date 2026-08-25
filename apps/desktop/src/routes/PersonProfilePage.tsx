@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ExternalLink, Github, GraduationCap, MessageCircle, Pencil, Star } from "lucide-react";
-import { usePerson, usePersonProfile } from "@pi-os/repositories";
+import { usePerson, usePersonProfile, useIsFavorite, useToggleFavorite } from "@pi-os/repositories";
 import { Button } from "@pi-os/ui/components/button";
 import { Card, CardContent } from "@pi-os/ui/components/card";
 import { Badge } from "@pi-os/ui/components/badge";
@@ -15,12 +15,18 @@ import {
 import { TopBar } from "../components/app-shell/topbar";
 import { PersonFormDialog } from "../components/people/person-form-dialog";
 import { OneOnOneDialog } from "../components/people/one-on-one-dialog";
+import { AlumniContinuityCard } from "../components/people/alumni-continuity-card";
+import { RelatedSummary } from "../components/shared/related-summary";
+import { usePersonRelated } from "@pi-os/repositories";
 import { openExternalLink } from "../lib/native/links";
 
 export default function PersonProfilePage() {
   const { id = "" } = useParams();
   const { data: person, isLoading } = usePerson(id);
   const { data: profile } = usePersonProfile(id);
+  const { data: related } = usePersonRelated(id);
+  const isFavorite = useIsFavorite("person", id);
+  const toggleFavorite = useToggleFavorite();
   const [editOpen, setEditOpen] = useState(false);
   const [oneOnOneOpen, setOneOnOneOpen] = useState(false);
 
@@ -105,6 +111,13 @@ export default function PersonProfilePage() {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            <button
+              onClick={() => toggleFavorite.mutate({ entityType: "person", entityId: person.id })}
+              aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+              className="text-muted-foreground hover:text-warning p-1.5"
+            >
+              <Star className={isFavorite ? "fill-warning text-warning h-4 w-4" : "h-4 w-4"} />
+            </button>
             <Button size="sm" onClick={() => setOneOnOneOpen(true)}>
               <MessageCircle className="h-3.5 w-3.5" /> Start 1:1
             </Button>
@@ -113,6 +126,10 @@ export default function PersonProfilePage() {
             </Button>
           </div>
         </div>
+
+        <RelatedSummary data={related} />
+
+        {person.status === "alumni" && <AlumniContinuityCard personId={person.id} />}
 
         {(person.research_interests.length > 0 || person.skills.length > 0) && (
           <div className="flex flex-wrap gap-6">

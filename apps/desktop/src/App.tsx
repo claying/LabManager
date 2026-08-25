@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Providers } from "./providers";
 import { AppShellLayout } from "./routes/app-shell-layout";
@@ -18,6 +19,13 @@ import SettingsPage from "./routes/SettingsPage";
 import PortfolioPage from "./routes/PortfolioPage";
 import SupervisionPage from "./routes/SupervisionPage";
 import CalendarPage from "./routes/CalendarPage";
+import MemoryPage from "./routes/MemoryPage";
+import SearchPage from "./routes/SearchPage";
+
+// The graph explorer pulls in @xyflow/react, by far the heaviest single
+// dependency added for it — split it into its own chunk so every other
+// route doesn't pay for it on first load.
+const GraphPage = lazy(() => import("./routes/GraphPage"));
 
 export default function App() {
   return (
@@ -43,6 +51,16 @@ export default function App() {
             <Route path="/portfolio" element={<PortfolioPage />} />
             <Route path="/supervision" element={<SupervisionPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/memory" element={<MemoryPage />} />
+            <Route
+              path="/graph"
+              element={
+                <Suspense fallback={null}>
+                  <GraphPage />
+                </Suspense>
+              }
+            />
+            <Route path="/search" element={<SearchPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
 

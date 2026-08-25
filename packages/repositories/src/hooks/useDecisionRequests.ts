@@ -5,7 +5,7 @@ import { queryKeys } from "./queryKeys";
 import { decisionRequestRepository } from "../repositories/decisionRequestRepository";
 
 export function useDecisionRequests(
-  filters: { status?: DecisionRequest["status"]; projectId?: string } = {},
+  filters: { status?: DecisionRequest["status"]; projectId?: string; personId?: string } = {},
 ) {
   return useQuery({
     queryKey: queryKeys.decisions.list(filters),

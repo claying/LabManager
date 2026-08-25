@@ -45,6 +45,7 @@ export interface DecisionRequestRepository {
   list(opts?: {
     status?: DecisionRequest["status"];
     projectId?: string;
+    personId?: string;
   }): Promise<DecisionRequestWithRelations[]>;
   get(id: string): Promise<DecisionRequestWithRelations | null>;
   create(input: DecisionRequestInsert): Promise<DecisionRequest>;
@@ -66,6 +67,10 @@ export const decisionRequestRepository: DecisionRequestRepository = {
       clauses.push("d.project_id = ?");
       values.push(opts.projectId);
     }
+    if (opts.personId) {
+      clauses.push("d.person_id = ?");
+      values.push(opts.personId);
+    }
     const where = clauses.length ? `where ${clauses.join(" and ")}` : "";
     const db = await getDb();
     const rows = await db.select<DecisionRequestRow[]>(
@@ -86,12 +91,13 @@ export const decisionRequestRepository: DecisionRequestRepository = {
     const id = newId();
     const now = nowIso();
     await db.execute(
-      `insert into decision_requests (id, project_id, person_id, title, context, options_json, recommendation, priority, created_at, updated_at)
-       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `insert into decision_requests (id, project_id, person_id, meeting_id, title, context, options_json, recommendation, priority, created_at, updated_at)
+       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         input.project_id ?? null,
         input.person_id ?? null,
+        input.meeting_id ?? null,
         input.title,
         input.context ?? null,
         toJsonArray(input.options ?? []),

@@ -13,6 +13,8 @@ import { hypothesisRepository } from "../repositories/hypothesisRepository";
 import { evidenceRepository } from "../repositories/evidenceRepository";
 import { submissionPlanRepository } from "../repositories/submissionPlanRepository";
 import { paperReadinessRepository } from "../repositories/paperReadinessRepository";
+import { projectRelationRepository } from "../repositories/projectRelationRepository";
+import { artifactRepository } from "../repositories/artifactRepository";
 import { getDb } from "../db/client";
 import { nowIso } from "../db/util";
 
@@ -922,6 +924,36 @@ export async function seedDemoWorkspace(): Promise<void> {
     description:
       "Submitted proposal for efficient, deployable vision-language-action foundation models.",
     notes: null,
+  });
+
+  // ---- Tier 3: project relations, artifacts ---------------------------------
+  await projectRelationRepository.create({
+    project_id: effBio.id,
+    related_project_id: geoflow.id,
+    relation_type: "depends_on",
+    notes: "Distillation targets DiffPolicy's action head.",
+  });
+  await projectRelationRepository.create({
+    project_id: ctrlGen.id,
+    related_project_id: geoflow.id,
+    relation_type: "extends",
+  });
+
+  await artifactRepository.create({
+    project_id: geoflow.id,
+    type: "code",
+    title: "diff-policy/",
+    url: "https://github.com/sim-lab/diff-policy",
+  });
+  await artifactRepository.create({
+    project_id: graphFM.id,
+    type: "results",
+    title: "ablation.csv",
+  });
+  await artifactRepository.create({
+    project_id: effBio.id,
+    type: "paper",
+    title: "main.pdf",
   });
 
   void pub1;

@@ -41,17 +41,36 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/005_tier2.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 6,
+            description: "tier 3: project relations, artifacts, file indexing, saved views, favorites, closeout",
+            sql: include_str!("../migrations/006_tier3.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
+}
+
+#[derive(Serialize)]
+struct GitCommitInfo {
+    sha: String,
+    message: String,
+    committed_at: String,
 }
 
 #[derive(Serialize)]
 struct GitInfo {
     branch: String,
+    repository_root: String,
     last_commit_sha: String,
     last_commit_message: String,
     last_commit_at: String,
     has_uncommitted_changes: bool,
+    changed_file_count: usize,
+    tags: Vec<String>,
+    recent_commits: Vec<GitCommitInfo>,
 }
+
+const RECENT_COMMIT_LIMIT: usize = 8;
 
 /// Reads local git metadata for a project's git_repository_path. `path` is
 /// only ever a directory the PI explicitly chose via a native folder picker
@@ -62,6 +81,12 @@ struct GitInfo {
 #[tauri::command]
 fn get_git_info(path: String) -> Result<GitInfo, String> {
     let repo = git2::Repository::discover(&path).map_err(|e| format!("Not a git repository: {e}"))?;
+
+    let repository_root = repo
+        .workdir()
+        .unwrap_or_else(|| repo.path())
+        .to_string_lossy()
+        .to_string();
 
     let head = repo.head().map_err(|e| format!("Could not read HEAD: {e}"))?;
     let branch = head.shorthand().unwrap_or("(detached)").to_string();
@@ -74,14 +99,41 @@ fn get_git_info(path: String) -> Result<GitInfo, String> {
     let statuses = repo
         .statuses(None)
         .map_err(|e| format!("Could not read working tree status: {e}"))?;
-    let has_uncommitted_changes = !statuses.is_empty();
+    let changed_file_count = statuses.len();
+    let has_uncommitted_changes = changed_file_count > 0;
+
+    let mut tags = Vec::new();
+    repo.tag_foreach(|_oid, name| {
+        if let Ok(name) = std::str::from_utf8(name) {
+            tags.push(name.trim_start_matches("refs/tags/").to_string());
+        }
+        true
+    })
+    .map_err(|e| format!("Could not read tags: {e}"))?;
+
+    let mut recent_commits = Vec::new();
+    let mut revwalk = repo.revwalk().map_err(|e| format!("Could not walk history: {e}"))?;
+    revwalk.push_head().map_err(|e| format!("Could not walk history: {e}"))?;
+    for oid in revwalk.take(RECENT_COMMIT_LIMIT) {
+        let oid = oid.map_err(|e| format!("Could not read commit: {e}"))?;
+        let c = repo.find_commit(oid).map_err(|e| format!("Could not read commit: {e}"))?;
+        recent_commits.push(GitCommitInfo {
+            sha: c.id().to_string(),
+            message: c.summary().unwrap_or("").to_string(),
+            committed_at: chrono_from_git_time(c.time()),
+        });
+    }
 
     Ok(GitInfo {
         branch,
+        repository_root,
         last_commit_sha,
         last_commit_message,
         last_commit_at,
         has_uncommitted_changes,
+        changed_file_count,
+        tags,
+        recent_commits,
     })
 }
 

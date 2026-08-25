@@ -88,4 +88,24 @@ export const queryKeys = {
     projectLoad: ["supervision", "project-load"] as const,
     interaction: (weeks: number) => ["supervision", "interaction", weeks] as const,
   },
+  memory: {
+    list: (filters: Record<string, unknown>) => ["memory", filters] as const,
+    context: (type: string, id: string) => ["memory", "context", type, id] as const,
+  },
+  related: {
+    project: (projectId: string) => ["related", "project", projectId] as const,
+    person: (personId: string) => ["related", "person", personId] as const,
+  },
+  graph: (kind: string, id: string) => ["graph", kind, id] as const,
+  projectRelations: (projectId: string) => ["project-relations", projectId] as const,
+  artifacts: (projectId: string) => ["artifacts", projectId] as const,
+  fileIndex: {
+    roots: (projectId: string) => ["file-index", "roots", projectId] as const,
+    files: (projectId: string, opts?: Record<string, unknown>) =>
+      ["file-index", "files", projectId, opts ?? {}] as const,
+    file: (id: string) => ["file-index", "file", id] as const,
+  },
+  savedViews: (entityType?: string) => ["saved-views", entityType ?? "all"] as const,
+  favorites: (entityType?: string) => ["favorites", entityType ?? "all"] as const,
+  advancedSearch: (query: string) => ["advanced-search", query] as const,
 } as const;

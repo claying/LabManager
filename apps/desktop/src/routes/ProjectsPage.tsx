@@ -18,10 +18,12 @@ import { HealthBadge } from "@pi-os/ui/components/domain/status-badge";
 import { PersonAvatar } from "@pi-os/ui/components/domain/person-avatar";
 import { Card } from "@pi-os/ui/components/card";
 import { toast } from "@pi-os/ui/components/sonner";
+import type { SavedViewFilters } from "@pi-os/domain";
 import { RouterLinkAdapter } from "../components/router-link-adapter";
 import { TopBar } from "../components/app-shell/topbar";
 import { projectColumns } from "../components/projects/columns";
 import { ProjectFormDialog } from "../components/projects/project-form-dialog";
+import { SavedViewsBar } from "../components/shared/saved-views-bar";
 
 export default function ProjectsPage() {
   const navigate = useNavigate();
@@ -67,6 +69,17 @@ export default function ProjectsPage() {
     }
   }
 
+  function applySavedView(filters: SavedViewFilters) {
+    const params = new URLSearchParams(searchParams);
+    if (filters.stage?.[0]) {
+      params.set("stage", filters.stage[0]);
+      setTab("table");
+    } else {
+      params.delete("stage");
+    }
+    setSearchParams(params);
+  }
+
   return (
     <>
       <TopBar>
@@ -95,6 +108,12 @@ export default function ProjectsPage() {
             </Button>
           </div>
         </div>
+
+        <SavedViewsBar
+          entityType="projects"
+          currentFilters={{ stage: stageFilter ? [stageFilter] : undefined }}
+          onApply={applySavedView}
+        />
 
         {isLoading ? (
           <div className="space-y-2">

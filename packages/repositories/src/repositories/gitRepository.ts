@@ -1,11 +1,21 @@
 import { invoke } from "@tauri-apps/api/core";
 
+export interface GitCommitInfo {
+  sha: string;
+  message: string;
+  committed_at: string;
+}
+
 export interface GitInfo {
   branch: string;
+  repository_root: string;
   last_commit_sha: string;
   last_commit_message: string;
   last_commit_at: string;
   has_uncommitted_changes: boolean;
+  changed_file_count: number;
+  tags: string[];
+  recent_commits: GitCommitInfo[];
 }
 
 /**

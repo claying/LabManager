@@ -270,3 +270,114 @@ export const SUBMISSION_HEALTH_LABELS: Record<(typeof SUBMISSION_HEALTH_STATUSES
     at_risk: "At risk",
     late: "Late",
   };
+
+// ============================================================================
+// Tier 3
+// ============================================================================
+
+export const PROJECT_RELATION_TYPES = [
+  "depends_on",
+  "extends",
+  "shares_data_with",
+  "shares_method_with",
+  "follow_up_to",
+  "related",
+] as const;
+
+export const PROJECT_RELATION_TYPE_LABELS: Record<(typeof PROJECT_RELATION_TYPES)[number], string> =
+  {
+    depends_on: "Depends on",
+    extends: "Extends",
+    shares_data_with: "Shares data with",
+    shares_method_with: "Shares method with",
+    follow_up_to: "Follow-up to",
+    related: "Related to",
+  };
+
+export const ARTIFACT_TYPES = [
+  "paper",
+  "code",
+  "dataset",
+  "slides",
+  "results",
+  "notes",
+  "website",
+  "other",
+] as const;
+
+export const ARTIFACT_TYPE_LABELS: Record<(typeof ARTIFACT_TYPES)[number], string> = {
+  paper: "Paper",
+  code: "Code",
+  dataset: "Dataset",
+  slides: "Slides",
+  results: "Results",
+  notes: "Notes",
+  website: "Website",
+  other: "Other",
+};
+
+export const FILE_INDEX_CATEGORIES = [
+  "code",
+  "paper",
+  "results",
+  "data",
+  "slides",
+  "notes",
+] as const;
+
+export const FILE_INDEX_CATEGORY_LABELS: Record<(typeof FILE_INDEX_CATEGORIES)[number], string> = {
+  code: "Code",
+  paper: "Paper",
+  results: "Results",
+  data: "Data",
+  slides: "Slides",
+  notes: "Notes",
+};
+
+/** Text formats safe to read and index the content of; anything else is metadata-only. */
+export const INDEXABLE_TEXT_EXTENSIONS = [
+  "md",
+  "txt",
+  "tex",
+  "csv",
+  "json",
+  "yaml",
+  "yml",
+  "py",
+  "ts",
+  "tsx",
+] as const;
+
+/** Files larger than this are indexed as metadata only — content is skipped. */
+export const FILE_INDEX_MAX_CONTENT_BYTES = 1_000_000;
+
+export const SAVED_VIEW_ENTITY_TYPES = ["projects", "publications", "memory"] as const;
+
+export const FAVORITE_ENTITY_TYPES = ["project", "person", "publication", "saved_view"] as const;
+
+/** The chronological sources a Research Memory event can come from. */
+export const MEMORY_EVENT_TYPES = [
+  "decision",
+  "meeting",
+  "update",
+  "evidence",
+  "milestone",
+  "stage_change",
+  "hypothesis",
+  "publication",
+  "grant",
+  "idea",
+] as const;
+
+export const MEMORY_EVENT_TYPE_LABELS: Record<(typeof MEMORY_EVENT_TYPES)[number], string> = {
+  decision: "Decision",
+  meeting: "Meeting",
+  update: "Update",
+  evidence: "Evidence",
+  milestone: "Milestone",
+  stage_change: "Stage change",
+  hypothesis: "Hypothesis",
+  publication: "Publication",
+  grant: "Grant",
+  idea: "Idea",
+};

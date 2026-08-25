@@ -15,3 +15,6 @@ export * from "./researchQuestion";
 export * from "./hypothesis";
 export * from "./evidence";
 export * from "./venue";
+export * from "./projectRelation";
+export * from "./artifact";
+export * from "./savedView";

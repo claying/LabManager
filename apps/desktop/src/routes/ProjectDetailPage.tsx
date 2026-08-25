@@ -1,9 +1,13 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
+  Archive,
+  ArchiveRestore,
   Circle,
   CircleDot,
   CheckCircle2,
+  CheckCircle,
+  ChevronDown,
   Clock,
   ExternalLink,
   FileText,
@@ -15,6 +19,7 @@ import {
   Pencil,
   Plus,
   Scale,
+  Star,
   TrendingUp,
   UserPlus,
   Video,
@@ -33,6 +38,13 @@ import {
   useDecisionRequests,
   useResearchQuestions,
   useHypotheses,
+  useArtifacts,
+  useProjectRelated,
+  usePauseProject,
+  useArchiveProject,
+  useUnarchiveProject,
+  useIsFavorite,
+  useToggleFavorite,
 } from "@pi-os/repositories";
 import { Button } from "@pi-os/ui/components/button";
 import { Card, CardContent } from "@pi-os/ui/components/card";
@@ -41,6 +53,12 @@ import { Skeleton } from "@pi-os/ui/components/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@pi-os/ui/components/tabs";
 import { EmptyState } from "@pi-os/ui/components/domain/empty-state";
 import { PersonAvatar } from "@pi-os/ui/components/domain/person-avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@pi-os/ui/components/dropdown-menu";
 import {
   HealthBadge,
   MilestoneStatusBadge,
@@ -62,7 +80,13 @@ import { GitInfoCard } from "../components/projects/git-info-card";
 import { DecisionRequestPanel } from "../components/decisions/decision-request-panel";
 import { ResearchQuestionPanel } from "../components/research/research-question-panel";
 import { HypothesisPanel } from "../components/research/hypothesis-panel";
+import { ProjectRelationsCard } from "../components/projects/project-relations-card";
+import { ArtifactsCard } from "../components/projects/artifacts-card";
+import { FileIndexCard } from "../components/projects/file-index-card";
+import { ProjectCloseoutDialog } from "../components/projects/project-closeout-dialog";
+import { RelatedSummary } from "../components/shared/related-summary";
 import { CompactBarChart } from "@pi-os/ui/components/domain/charts/compact-bar-chart";
+import { toast } from "@pi-os/ui/components/sonner";
 
 const QUESTION_STATUS_ICON: Record<ResearchQuestionStatus, typeof Circle> = {
   open: Circle,
@@ -155,6 +179,13 @@ export default function ProjectDetailPage() {
   const { data: openDecisions = [] } = useDecisionRequests({ status: "open", projectId: id });
   const { data: questions = [] } = useResearchQuestions(id);
   const { data: hypotheses = [] } = useHypotheses(id);
+  const { data: artifacts = [] } = useArtifacts(id);
+  const { data: related } = useProjectRelated(id);
+  const pauseProject = usePauseProject();
+  const archiveProject = useArchiveProject();
+  const unarchiveProject = useUnarchiveProject();
+  const isFavorite = useIsFavorite("project", id);
+  const toggleFavorite = useToggleFavorite();
 
   const [updateOpen, setUpdateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -163,6 +194,7 @@ export default function ProjectDetailPage() {
   const [meetingOpen, setMeetingOpen] = useState(false);
   const [publicationOpen, setPublicationOpen] = useState(false);
   const [decisionOpen, setDecisionOpen] = useState(false);
+  const [closeoutOpen, setCloseoutOpen] = useState(false);
   const [timelineFilter, setTimelineFilter] = useState<TimelineFilter>("all");
   const [questionPanel, setQuestionPanel] = useState<"new" | string | null>(null);
   const [hypothesisPanel, setHypothesisPanel] = useState<"new" | string | null>(null);
@@ -229,14 +261,110 @@ export default function ProjectDetailPage() {
               )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              <button
+                onClick={() =>
+                  toggleFavorite.mutate({ entityType: "project", entityId: project.id })
+                }
+                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                className="text-muted-foreground hover:text-warning p-1.5"
+              >
+                <Star className={isFavorite ? "fill-warning text-warning h-4 w-4" : "h-4 w-4"} />
+              </button>
               <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
                 <Pencil className="h-3.5 w-3.5" /> Edit
               </Button>
               <Button size="sm" onClick={() => setUpdateOpen(true)}>
                 <Plus className="h-3.5 w-3.5" /> Add Update
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    More <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {!project.closed_at && (
+                    <DropdownMenuItem onClick={() => setCloseoutOpen(true)}>
+                      <CheckCircle className="h-3.5 w-3.5" /> Complete…
+                    </DropdownMenuItem>
+                  )}
+                  {project.stage !== "paused" && (
+                    <DropdownMenuItem onClick={() => pauseProject.mutate(project.id)}>
+                      <PauseCircle className="h-3.5 w-3.5" /> Pause
+                    </DropdownMenuItem>
+                  )}
+                  {project.archived ? (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        unarchiveProject.mutate(project.id);
+                        toast.success("Project unarchived");
+                      }}
+                    >
+                      <ArchiveRestore className="h-3.5 w-3.5" /> Unarchive
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        archiveProject.mutate(project.id);
+                        toast.success("Project archived");
+                      }}
+                    >
+                      <Archive className="h-3.5 w-3.5" /> Archive
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
+
+          {(project.archived || project.closed_at) && (
+            <Card className="border-muted bg-muted/30">
+              <CardContent className="space-y-2 py-3 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="muted">
+                    {project.closed_at ? "Completed" : "Archived"}
+                    {project.closed_at &&
+                      ` ${new Date(project.closed_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}`}
+                  </Badge>
+                </div>
+                {project.outcome && (
+                  <div>
+                    <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                      Outcome
+                    </p>
+                    <p className="text-foreground text-sm">{project.outcome}</p>
+                  </div>
+                )}
+                {project.closeout_note && (
+                  <p className="text-muted-foreground text-xs">{project.closeout_note}</p>
+                )}
+                {project.closed_at && (
+                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
+                    {project.members.length > 0 && (
+                      <span className="text-muted-foreground">
+                        People: {project.members.map((m) => m.person.name).join(" · ")}
+                      </span>
+                    )}
+                    {artifacts.length > 0 && (
+                      <span className="text-muted-foreground">
+                        Outputs: {artifacts.map((a) => a.title).join(" · ")}
+                      </span>
+                    )}
+                    <span className="text-muted-foreground">
+                      {questions.filter((q) => q.status === "answered").length} question
+                      {questions.filter((q) => q.status === "answered").length === 1
+                        ? ""
+                        : "s"}{" "}
+                      answered
+                      {" · "}
+                      {related?.decisions.length ?? 0} decision
+                      {(related?.decisions.length ?? 0) === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <div className="flex flex-wrap gap-2">
             {project.github_url && (
@@ -252,6 +380,8 @@ export default function ProjectDetailPage() {
               <QuickLink href={project.website_url} icon={Globe} label="Website" />
             )}
           </div>
+
+          <RelatedSummary data={related} />
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <InfoStat label="Lead" value={project.lead?.name ?? "Unassigned"} />
@@ -407,9 +537,16 @@ export default function ProjectDetailPage() {
             </Card>
 
             <div className="grid gap-4 lg:grid-cols-2">
+              <ArtifactsCard projectId={project.id} />
+              <ProjectRelationsCard projectId={project.id} />
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
               <GitInfoCard path={project.git_repository_path} />
               <LinkedFiles entityType="project" entityId={project.id} />
             </div>
+
+            <FileIndexCard projectId={project.id} />
           </TabsContent>
 
           <TabsContent value="updates">
@@ -759,6 +896,7 @@ export default function ProjectDetailPage() {
         projectId={id}
         hypothesis={selectedHypothesis}
       />
+      <ProjectCloseoutDialog projectId={id} open={closeoutOpen} onOpenChange={setCloseoutOpen} />
     </>
   );
 }

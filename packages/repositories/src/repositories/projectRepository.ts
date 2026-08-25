@@ -49,6 +49,10 @@ export interface ProjectRepository {
   update(id: string, patch: ProjectUpdatePatch): Promise<Project>;
   updateStage(id: string, stage: ProjectStage): Promise<Project>;
   archive(id: string): Promise<void>;
+  unarchive(id: string): Promise<void>;
+  /** Records a project's closeout — outcome/final note and a timestamp — and archives it. Key outputs and research summary are read from artifacts/research_questions/decisions at render time, not stored here. */
+  complete(id: string, input: { outcome: string; closeout_note?: string | null }): Promise<Project>;
+  pause(id: string): Promise<Project>;
   remove(id: string): Promise<void>;
   addMember(projectId: string, personId: string, role: ProjectMemberRole): Promise<ProjectMember>;
   updateMemberRole(memberId: string, role: ProjectMemberRole): Promise<ProjectMember>;
@@ -207,6 +211,24 @@ export const projectRepository: ProjectRepository = {
   async archive(id) {
     const db = await getDb();
     await db.execute("update projects set archived = 1 where id = ?", [id]);
+  },
+
+  async unarchive(id) {
+    const db = await getDb();
+    await db.execute("update projects set archived = 0 where id = ?", [id]);
+  },
+
+  async complete(id, input) {
+    return projectRepository.update(id, {
+      outcome: input.outcome,
+      closeout_note: input.closeout_note ?? null,
+      closed_at: nowIso(),
+      archived: true,
+    });
+  },
+
+  async pause(id) {
+    return projectRepository.update(id, { stage: "paused" });
   },
 
   async remove(id) {

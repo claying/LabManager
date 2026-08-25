@@ -17,6 +17,8 @@ export interface GrantRepository {
   remove(id: string): Promise<void>;
   addMember(grantId: string, personId: string, role: GrantMemberRole): Promise<void>;
   removeMember(grantMemberId: string): Promise<void>;
+  linkProject(grantId: string, projectId: string): Promise<void>;
+  unlinkProject(grantId: string, projectId: string): Promise<void>;
 }
 
 interface Row extends Grant {
@@ -41,6 +43,10 @@ async function attachRelations(
        where gm.grant_id = ?`,
       [grant.id],
     );
+    const projectRows = await db.select<{ id: string; title: string }[]>(
+      `select pr.id, pr.title from grant_projects gp join projects pr on pr.id = gp.project_id where gp.grant_id = ? order by pr.title`,
+      [grant.id],
+    );
     result.push({
       ...grant,
       pi: pi_name
@@ -58,6 +64,7 @@ async function attachRelations(
         role: m.role as PersonRole,
         grantRole: m.grant_role as GrantMemberRole,
       })),
+      projects: projectRows,
     });
   }
   return result;
@@ -141,5 +148,26 @@ export const grantRepository: GrantRepository = {
   async removeMember(grantMemberId) {
     const db = await getDb();
     await db.execute("delete from grant_members where id = ?", [grantMemberId]);
+  },
+
+  async linkProject(grantId, projectId) {
+    const db = await getDb();
+    const existing = await db.select<{ id: string }[]>(
+      "select id from grant_projects where grant_id = ? and project_id = ?",
+      [grantId, projectId],
+    );
+    if (existing.length > 0) return;
+    await db.execute(
+      "insert into grant_projects (id, grant_id, project_id, created_at) values (?, ?, ?, ?)",
+      [newId(), grantId, projectId, nowIso()],
+    );
+  },
+
+  async unlinkProject(grantId, projectId) {
+    const db = await getDb();
+    await db.execute("delete from grant_projects where grant_id = ? and project_id = ?", [
+      grantId,
+      projectId,
+    ]);
   },
 };

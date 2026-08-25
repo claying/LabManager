@@ -41,8 +41,14 @@ export { attachmentRepository } from "./attachmentRepository";
 export { settingsRepository } from "./settingsRepository";
 export { backupRepository } from "./backupRepository";
 export { exportRepository } from "./exportRepository";
-export { globalSearch, KIND_LABELS } from "./searchRepository";
-export type { SearchResult, SearchResultKind } from "./searchRepository";
+export { globalSearch, advancedSearch, parseSearchQuery, KIND_LABELS } from "./searchRepository";
+export type {
+  SearchResult,
+  SearchResultKind,
+  SearchFilters,
+  SearchFilterKey,
+  ParsedSearchQuery,
+} from "./searchRepository";
 export { getGitInfo } from "./gitRepository";
 export type { GitInfo } from "./gitRepository";
 export { getDashboardData, getThisWeekSummary } from "./dashboardRepository";
@@ -94,3 +100,19 @@ export type {
   ProjectLoadEntry,
   InteractionWeek,
 } from "./supervisionRepository";
+export { projectRelationRepository } from "./projectRelationRepository";
+export type { ProjectRelationRepository, ProjectRelationRow } from "./projectRelationRepository";
+export { artifactRepository } from "./artifactRepository";
+export type { ArtifactRepository } from "./artifactRepository";
+export { fileIndexRepository } from "./fileIndexRepository";
+export type { FileIndexRepository, IndexResult } from "./fileIndexRepository";
+export { savedViewRepository } from "./savedViewRepository";
+export type { SavedViewRepository } from "./savedViewRepository";
+export { favoriteRepository } from "./favoriteRepository";
+export type { FavoriteRepository, FavoriteWithTitle } from "./favoriteRepository";
+export { memoryRepository } from "./memoryRepository";
+export type { MemoryRepository, MemoryFilters, MemoryContext } from "./memoryRepository";
+export { relationshipRepository } from "./relationshipRepository";
+export type { RelationshipRepository } from "./relationshipRepository";
+export { graphRepository } from "./graphRepository";
+export type { GraphNode, GraphEdge, GraphNeighborhood, GraphNodeKind } from "./graphRepository";

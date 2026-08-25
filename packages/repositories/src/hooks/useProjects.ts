@@ -86,6 +86,48 @@ export function useArchiveProject() {
   });
 }
 
+export function useUnarchiveProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (projectId: string) => projectRepository.unarchive(projectId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["projects"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard });
+    },
+  });
+}
+
+export function usePauseProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (projectId: string) => projectRepository.pause(projectId),
+    onSuccess: (data) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.detail(data.id) });
+      void qc.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+}
+
+export function useCompleteProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      outcome,
+      closeout_note,
+    }: {
+      id: string;
+      outcome: string;
+      closeout_note?: string | null;
+    }) => projectRepository.complete(id, { outcome, closeout_note }),
+    onSuccess: (data) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.detail(data.id) });
+      void qc.invalidateQueries({ queryKey: ["projects"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard });
+    },
+  });
+}
+
 export function useAddProjectMember(projectId: string) {
   const qc = useQueryClient();
   return useMutation({

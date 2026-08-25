@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { CheckCircle2, Circle, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, Star } from "lucide-react";
 import { calculateReadinessPercent } from "@pi-os/domain";
 import { PAPER_READINESS_STATUS_LABELS, SUBMISSION_HEALTH_LABELS } from "@pi-os/types";
 import {
@@ -13,6 +13,8 @@ import {
   useSetSubmissionPlanItemStatus,
   useVenueCycles,
   useUpdatePublication,
+  useIsFavorite,
+  useToggleFavorite,
 } from "@pi-os/repositories";
 import { Button } from "@pi-os/ui/components/button";
 import { Skeleton } from "@pi-os/ui/components/skeleton";
@@ -56,6 +58,8 @@ export default function PublicationDetailPage() {
   const setPlanItemStatus = useSetSubmissionPlanItemStatus();
   const { data: cycles = [] } = useVenueCycles();
   const updatePublication = useUpdatePublication(id);
+  const isFavorite = useIsFavorite("publication", id);
+  const toggleFavorite = useToggleFavorite();
   const [showMore, setShowMore] = useState(false);
 
   if (isLoading || !publication) {
@@ -120,7 +124,22 @@ export default function PublicationDetailPage() {
                   : (publication.venue ?? "No venue set")
               }
               className="py-0"
-              actions={<PublicationStatusBadge status={publication.status} />}
+              actions={
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() =>
+                      toggleFavorite.mutate({ entityType: "publication", entityId: publication.id })
+                    }
+                    aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                    className="text-muted-foreground hover:text-warning p-1"
+                  >
+                    <Star
+                      className={isFavorite ? "fill-warning text-warning h-4 w-4" : "h-4 w-4"}
+                    />
+                  </button>
+                  <PublicationStatusBadge status={publication.status} />
+                </div>
+              }
             />
             {health && (
               <Badge

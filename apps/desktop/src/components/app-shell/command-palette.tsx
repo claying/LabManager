@@ -4,18 +4,29 @@ import {
   BarChart3,
   CalendarPlus,
   CircleHelp,
+  File,
   FileText,
   FlaskConical,
+  History,
   Lightbulb,
   MessageSquare,
+  Network,
   PiggyBank,
   PlusCircle,
   Scale,
+  Search,
+  Star,
   UsersRound,
   Users,
   Video,
 } from "lucide-react";
-import { useGlobalSearch, type SearchResultKind } from "@pi-os/repositories";
+import {
+  useGlobalSearch,
+  useFavoritesWithTitles,
+  type FavoriteWithTitle,
+  type SearchResultKind,
+} from "@pi-os/repositories";
+import type { FavoriteEntityType } from "@pi-os/types";
 import {
   CommandDialog,
   CommandEmpty,
@@ -38,6 +49,7 @@ const KIND_ICON: Record<SearchResultKind, typeof FlaskConical> = {
   idea: Lightbulb,
   research_question: CircleHelp,
   hypothesis: FlaskConical,
+  file: File,
 };
 const KIND_HREF: Record<SearchResultKind, (id: string, extra?: string) => string> = {
   project: (id) => `/projects/${id}`,
@@ -50,7 +62,22 @@ const KIND_HREF: Record<SearchResultKind, (id: string, extra?: string) => string
   idea: () => `/ideas`,
   research_question: () => `/projects`,
   hypothesis: () => `/projects`,
+  file: () => `/projects`,
 };
+
+const FAVORITE_ROUTE: Record<FavoriteEntityType, (id: string) => string> = {
+  project: (id) => `/projects/${id}`,
+  person: (id) => `/people/${id}`,
+  publication: (id) => `/publications/${id}`,
+  saved_view: () => `/projects`,
+};
+
+function favoriteHref(f: FavoriteWithTitle): string {
+  return FAVORITE_ROUTE[f.entity_type](f.entity_id);
+}
+function favoriteLabel(f: FavoriteWithTitle): string {
+  return f.title;
+}
 
 export function CommandPalette({
   open,
@@ -63,6 +90,7 @@ export function CommandPalette({
   const { openIdeaCapture, openNewDecision, openNewVenueCycle } = useQuickActions();
   const [query, setQuery] = useState("");
   const { data: results } = useGlobalSearch(query);
+  const { data: favorites = [] } = useFavoritesWithTitles();
 
   useEffect(() => {
     function handler(e: KeyboardEvent) {
@@ -118,7 +146,32 @@ export function CommandPalette({
           <CommandItem onSelect={() => go("/supervision")}>
             <UsersRound className="h-4 w-4" /> Open Supervision
           </CommandItem>
+          <CommandItem onSelect={() => go("/memory")}>
+            <History className="h-4 w-4" /> Open Research Memory
+          </CommandItem>
+          <CommandItem onSelect={() => go("/graph")}>
+            <Network className="h-4 w-4" /> Open Relationship Graph
+          </CommandItem>
+          <CommandItem onSelect={() => go("/search")}>
+            <Search className="h-4 w-4" /> Advanced Search
+          </CommandItem>
         </CommandGroup>
+        {!query && favorites.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Favorites">
+              {favorites.map((f) => (
+                <CommandItem
+                  key={`${f.entity_type}-${f.entity_id}`}
+                  onSelect={() => go(favoriteHref(f))}
+                >
+                  <Star className="h-4 w-4" />
+                  {favoriteLabel(f)}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
         {results && results.length > 0 && (
           <>
             <CommandSeparator />
