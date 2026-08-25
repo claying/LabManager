@@ -126,11 +126,17 @@ pub fn run() {
         // explicitly clicks "Check for Updates" in Settings.
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
-        .plugin(
-            tauri_plugin_sql::Builder::default()
-                .add_migrations("sqlite:pi-research-os.db", migrations())
-                .build(),
-        )
+        .plugin({
+            let sql = tauri_plugin_sql::Builder::default()
+                .add_migrations("sqlite:pi-research-os.db", migrations());
+            // `tauri dev` and a release build share a bundle identifier, so
+            // they'd otherwise collide on the same app-data SQLite file (see
+            // packages/repositories/src/db/client.ts) — the frontend picks a
+            // separate filename in dev, which needs its own migrations here.
+            #[cfg(debug_assertions)]
+            let sql = sql.add_migrations("sqlite:pi-research-os.dev.db", migrations());
+            sql.build()
+        })
         .plugin(
             tauri_plugin_window_state::Builder::default()
                 .with_state_flags(tauri_plugin_window_state::StateFlags::all())
